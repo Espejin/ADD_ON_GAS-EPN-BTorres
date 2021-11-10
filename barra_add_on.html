@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html>
+  <script type="text/javascript" src="https://raw.githubusercontent.com/GTCMT/DataToMusicAPI/master/dtm.js"></script>
+  <head>
+  </head>
+  <body>
+    <p>Prueba de interfaz</p>
+    <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
+    <p> <button type="button" onclick="google.script.run.graficador()">Recolector</button> </p>
+    <p> <button type="button" onclick="sonido_continuo()">Prueba auditiva</button> </p>
+    <p> <button type="button" onclick="google.script.run.escalador_frecuencias()">Prueba funciones programación</button> </p>
+    <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
+
+    <input type="button" value="Not Clicked"
+      onclick="probando_gs()" />
+    
+    <script>
+
+        function pasarlo(data){
+            console.log("mis datos  " + JSON.parse(data))
+        }
+
+        function pasoporServer(dato){
+
+          var datoJSON = dato;//JSON.parse(dato);
+          
+          //return datoJSON;
+
+        }
+        
+        function prueba_dtm(){
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+
+            // create Oscillator node
+            var oscillator = context.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(100, context.currentTime); // value in hertz
+            oscillator.connect(context.destination);
+            oscillator.start(context.currentTime);
+            oscillator.stop(context.currentTime + 2);
+        }
+
+        function tocar_frecuencia(frec,inicio,fin){
+            // Contexto de audio, primera version para navegadores basados en Chromium o Firefox, segunda 
+            // para antiguos o algunas versiones de Safari.         
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            //Se define sonido de nota sobre el tiempo en que se apagará el mismo.
+            //Se crea una frecuencia constante con un oscilador.
+            var nota = context.createOscillator();
+            //Se define el volumen, mediante a la ganancia, por defecto 1 (100%)
+            var volumen = context.createGain();
+            //El oscilador se creará con una onda cuadrada.
+            nota.type = 'sine';
+            //Se conecta el oscilador con la ganancia.
+            nota.connect(volumen);
+            //Se coloca una frecuencia para sonar de manera constante.
+            nota.frequency.value = frec;
+            //Se conecta el sonido a los parlantes o dispositivo de salida de audio.
+            volumen.connect(context.destination);
+            //Se toca la nota,
+            nota.start(0 + inicio);
+            //Se modifica la ganancia en el paso del tiempo
+            //volumen.gain.exponentialRampToValueAtTime(0.3, context.currentTime + inicio + 0.25);
+            nota.stop(0 + fin);
+        }
+
+        function probando_gs(){
+          
+        var dato = google.script.run.withSuccessHandler(
+
+          function (fuente) 
+           {            
+             var datazo =  JSON.parse(fuente);  // undefined
+             console.log(datazo[0]); // Escalamiento de Frecuencias
+             generar_audio_GLinea(datazo[0][0],datazo[1][0])
+             console.log(datazo[1]);  // Escalamiento de tiempo
+             console.log(datazo[2]);  //Vertices (Puntos) en Frecuencia
+           }
+        ).escalador_frecuencias();
+          
+          //var datos_a = google.script.run.withSuccessHandler(pasoporServer).probador();
+          //console.log(dato);
+        }
+
+        function sonido_continuo(){
+            tocar_frecuencia(293.7,0,2);
+            //tocar_frecuencia(100,1,2);
+        }
+
+        function generar_audio_GLinea(vector_frecuencia,vector_tiempo){
+            
+          var t_inicial = 0;
+          var t_final = 0;
+
+          // create web audio api context
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+          // create Oscillator node
+          const oscillator = audioCtx.createOscillator();
+
+          oscillator.type = 'square';
+
+
+          for(var i = 0; i < vector_frecuencia.length; i++){
+                t_final = t_final + vector_tiempo[i]; 
+                oscillator.frequency.setValueAtTime(vector_frecuencia[i], t_inicial); // value in hertz
+                t_inicial = t_final;
+          }
+      
+          oscillator.connect(audioCtx.destination);
+          oscillator.start();
+          oscillator.stop(t_final + vector_tiempo[vector_tiempo.length - 1])
+            
+            /*
+
+            console.log(vector_frecuencia);
+            console.log(vector_tiempo);
+
+            for(var i = 0; i < vector_frecuencia.length; i++){
+                t_final = t_final + vector_tiempo[i]; 
+                tocar_frecuencia(vector_frecuencia[i], t_inicial, t_final);
+                t_inicial = t_final;
+            }
+            */
+
+        }
+
+        function my_dtm(){
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var channels = 2;
+            // Create an empty two second stereo buffer at the
+            // sample rate of the AudioContext
+            var frameCount = audioCtx.sampleRate * 2.0;
+
+            var myArrayBuffer = audioCtx.createBuffer(channels, frameCount, audioCtx.sampleRate);
+            let num_2 = 0.05;
+
+            for (var channel = 0; channel < channels; channel++) {
+            // This gives us the actual ArrayBuffer that contains the data
+            var nowBuffering = myArrayBuffer.getChannelData(channel);
+               for (var i = 0; i < frameCount; i++) {
+                  // Math.random() is in [0; 1.0]
+                  // audio needs to be in [-1.0; 1.0]
+                  nowBuffering[i] = 1;
+                }
+            }
+
+            // Get an AudioBufferSourceNode.
+           // This is the AudioNode to use when we want to play an AudioBuffer
+           var source = audioCtx.createBufferSource();
+          // set the buffer in the AudioBufferSourceNode
+          source.buffer = myArrayBuffer;
+          // connect the AudioBufferSourceNode to the
+          // destination so we can hear the sound
+          source.connect(audioCtx.destination);
+          // start the source playing
+          source.start();
+        }
+        
+        /*
+        function probando_audioBuffer(){
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+
+            //Sonido de 1/2 (0,5) segundos
+            var myArrayBuffer = context.createBuffer(2,22050, 44100);
+            var nowBuffering = myArrayBuffer.getChannelData(1);
+            nowBuffering[1] = [100,200,300];
+
+        }
+        */
+    </script>
+  </body>
+</html>
