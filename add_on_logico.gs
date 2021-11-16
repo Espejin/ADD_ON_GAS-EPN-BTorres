@@ -1,5 +1,4 @@
-// ----------------------------------------------------------------------------------------------------------------------
-// -------------------- FUNCIONES DE CREACION DE ADD - ON DENTRO DE SPREADSHEETS ----------------------------------------
+----------------------------------------
 // ----------------------------------------------------------------------------------------------------------------------
 
 // Permite pasar datos entre el servidor y el cliente.
@@ -127,8 +126,9 @@ function escalador_frecuencias(){
     var len_frec = frecuencias.length;
     var count = 0;
     var distancia = distancia_puntos(datos);
+    var canales = eje_espacial(extraer_columnas(datos,"tiempo"));
 
-    //Logger.log(datos[0]);
+    Logger.log("Probando canal: " + canales);
     //Logger.log(datos);
 
     //saltarse primera columna porque contiene la escala en el eje x del grafico lineal.
@@ -379,7 +379,76 @@ function distancia_puntos(matriz){
         dist = [];
         count = 0;
     }
+
     return dist_t;
+}
+
+// Funcion para obtener canales de audio sobre los cuales trabajar
+function eje_espacial(espacio_nw){
+    
+    Logger.log("tiempo : " + espacio_nw);
+    
+    var r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
+
+    if(r_t_max_min[1] < 0){
+        for(var i = 0; i < espacio_nw.length; i++){
+            espacio_nw[i] = espacio_nw[i] + r_t_max_min[1];
+        }
+        r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
+    } 
+
+    Logger.log("max : " + r_t_max_min);
+    
+    Logger.log("vector :" + espacio_nw)
+  
+    var secciones = seccionador(r_t_max_min[0],r_t_max_min[1]);
+    Logger.log("secciones: " + secciones);
+    var canales = [];
+
+    for( var j = 0; j < espacio_nw.length; j++ ){
+        
+        switch(true){
+          case (espacio_nw[j] >= secciones[0][0] && espacio_nw[j] < secciones[0][1]):
+            canales[j] = 1;
+            break;
+          case (espacio_nw[j] >= secciones[1][0] && espacio_nw[j] < secciones[1][1]):
+            canales[j] = 2;
+            break;
+          case (espacio_nw[j] >= secciones[2][0] && espacio_nw[j] < secciones[2][1]):
+            canales[j] = 3;
+            break;
+          case (espacio_nw[j] >= secciones[3][0] && espacio_nw[j] < secciones[3][1]):
+            canales[j] = 4;
+            break;
+          case (espacio_nw[j] >= secciones[4][0] && espacio_nw[j] < secciones[4][1]):
+            canales[j] = 5;
+            break;
+          case (espacio_nw[j] >= secciones[5][0] && espacio_nw[j] <= secciones[5][1]):
+            canales[j] = 6;
+            break;
+        }
+        Logger.log(canales[j])
+    }
+
+    return canales;
+}
+
+function seccionador(maximo, minimo){
+
+    var tam_secc = (maximo - minimo)/6
+    var ini_secc = tam_secc + minimo;
+
+    var secc1 = [minimo, ini_secc];
+    var secc2 = [ini_secc, ini_secc + tam_secc];
+    var secc3 = [ini_secc + tam_secc, ini_secc + (2*tam_secc)];
+    var secc4 = [ini_secc + (2*tam_secc), ini_secc + (3*tam_secc)];
+    var secc5 = [ini_secc + (3*tam_secc), ini_secc + (4*tam_secc)];
+    var secc6 = [ini_secc + (4*tam_secc), ini_secc + (5*tam_secc)];
+
+
+    var secciones = [secc1,secc2,secc3,secc4,secc5,secc6];
+
+    return secciones;
 }
 
 
