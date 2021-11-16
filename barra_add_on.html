@@ -8,7 +8,7 @@
     <p>Prueba de interfaz</p>
     <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
     <p> <button type="button" onclick="google.script.run.graficador()">Recolector</button> </p>
-    <p> <button type="button" onclick="sonido_continuo()">Prueba auditiva</button> </p>
+    <p> <button type="button" onclick="audio_espacial()">Prueba auditiva</button> </p>
     <p> <button type="button" onclick="google.script.run.escalador_frecuencias()">Prueba funciones programación</button> </p>
     <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
 
@@ -85,7 +85,7 @@
 
         function sonido_continuo(){
             tocar_frecuencia(293.7,0,2);
-            //tocar_frecuencia(100,1,2);
+            tocar_frecuencia(1000,1,2);
         }
 
         function generar_audio_GLinea(vector_frecuencia,vector_tiempo){
@@ -123,6 +123,73 @@
                 t_inicial = t_final;
             }
             */
+
+        }
+
+        function audio_espacial(){
+
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+          // create Oscillator node
+          const oscillator = audioCtx.createOscillator();
+
+          oscillator.type = 'square';
+          // 0 MONO
+          // LFE subwoofer
+          var ganancia_izq = audioCtx.createGain();  
+          var ganancia_der = audioCtx.createGain(); 
+          var ganancia_cent = audioCtx.createGain();
+          var ganancia_izq_surr = audioCtx.createGain(); 
+          var ganancia_der_surr = audioCtx.createGain(); 
+
+          var merger = audioCtx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_izq_surr);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+          ganancia_izq_surr.connect(merger, 0, 4);  
+          ganancia_der_surr.connect(merger, 0, 5);
+        
+          oscillator.frequency.setValueAtTime(300, 0);
+          //oscillator.frequency.setValueAtTime(1000, 2);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,0);
+          ganancia_izq.gain.setValueAtTime(0,0);
+          ganancia_cent.gain.setValueAtTime(0,0);
+          ganancia_der.gain.setValueAtTime(0,0);
+          ganancia_der_surr.gain.setValueAtTime(1,0);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,1);
+          ganancia_izq.gain.setValueAtTime(0,1);
+          ganancia_cent.gain.setValueAtTime(0,1);
+          ganancia_der.gain.setValueAtTime(1,1);
+          ganancia_der_surr.gain.setValueAtTime(0,1);
+
+          ganancia_izq.gain.setValueAtTime(0,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_cent.gain.setValueAtTime(1,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_der_surr.gain.setValueAtTime(0,2);
+          
+          merger.connect(audioCtx.destination);
+
+          //Connect Left and Right Nodes to the output  
+          //Assuming stereo as initial status
+
+          //splitter.connect(audioCtx.destination);
+          oscillator.start(0);
+          oscillator.stop(3);
 
         }
 
