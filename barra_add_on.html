@@ -8,7 +8,7 @@
     <p>Prueba de interfaz</p>
     <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
     <p> <button type="button" onclick="google.script.run.graficador()">Recolector</button> </p>
-    <p> <button type="button" onclick="sonido_continuo()">Prueba auditiva</button> </p>
+    <p> <button type="button" onclick="audio_espacial()">Prueba auditiva</button> </p>
     <p> <button type="button" onclick="google.script.run.escalador_frecuencias()">Prueba funciones programación</button> </p>
     <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
 
@@ -73,9 +73,11 @@
            {            
              var datazo =  JSON.parse(fuente);  // undefined
              console.log(datazo[0]); // Escalamiento de Frecuencias
-             generar_audio_GLinea(datazo[0][0],datazo[1][0])
+             generar_audio_GLinea(datazo[0][0],datazo[1][0],datazo[3], datazo[4][0])
              console.log(datazo[1]);  // Escalamiento de tiempo
              console.log(datazo[2]);  //Vertices (Puntos) en Frecuencia
+             console.log(datazo[3]);  //Eje espacial
+             console.log(datazo[4]);  //Duracion de secciones
            }
         ).escalador_frecuencias();
           
@@ -85,13 +87,15 @@
 
         function sonido_continuo(){
             tocar_frecuencia(293.7,0,2);
-            //tocar_frecuencia(100,1,2);
+            tocar_frecuencia(1000,1,2);
         }
 
-        function generar_audio_GLinea(vector_frecuencia,vector_tiempo){
+        function generar_audio_GLinea(vector_frecuencia,vector_tiempo,vector_canales,tiempo_canales){
             
           var t_inicial = 0;
           var t_final = 0;
+          var ganancias = [ 0 , 0.45 , 0.9 , 1 , 0.9 , 0.45 , 0 ]; //Valor de Ganancia para 7 canales
+          var canales = [ 1 , 1 , 1 , 2 , 3 , 3 , 3 ]; //Correspondencias de Canal
 
           // create web audio api context
           const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -101,28 +105,224 @@
 
           oscillator.type = 'square';
 
+          var ganancia_izq = audioCtx.createGain();  
+          var ganancia_der = audioCtx.createGain(); 
+          var ganancia_cent = audioCtx.createGain(); 
+
+          var merger = audioCtx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
 
           for(var i = 0; i < vector_frecuencia.length; i++){
                 t_final = t_final + vector_tiempo[i]; 
                 oscillator.frequency.setValueAtTime(vector_frecuencia[i], t_inicial); // value in hertz
                 t_inicial = t_final;
           }
+
+          //Generar for para ganancias
+          var count = 0;
+          var tiempo = 0;
+          var aux_baj_sub = 0;
+          var dur_div = []
+          var segmento = 0;
+          var bajando = 0;
+          var subiendo = 0;
+
+          for(var j = 0; j < vector_canales.length; j++){
+
+              if( tiempo == 0 ){
+                  
+                  asignar_ganancia(1,canales[vector_canales[j]-1],0,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der);
+                  //tiempo = tiempo + tiempo_canales[j];
+                  console.log("inicio: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-1] + " gain ->" + ganancias[vector_canales[j]-1] + " tiempo ->" + tiempo);
+                 
+              } 
+              
+              if(j == vector_canales.length - 1 ){
+
+                console.log("Final Conseguido!");
+
+              } else if( vector_canales[j] == vector_canales[j+1] ){
+                  asignar_ganancia(1,canales[vector_canales[j]-1],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der);
+                  tiempo = tiempo + tiempo_canales[j];
+
+                  console.log("igual: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-1] + " gain ->" + ganancias[vector_canales[j]-1]  + " tiempo ->" + tiempo);
+
+              } else if( vector_canales[j] > vector_canales[j+1]){
+
+                  asignar_ganancia(1,canales[vector_canales[j]-1],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der);
+
+                  aux_baj_sub = vector_canales[j] - vector_canales[j+1]
+                  segmento = tiempo_canales[j]/(aux_baj_sub);
+                  bajando  = 2;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[vector_canales[j]-bajando],tiempo,ganancias[vector_canales[j]-bajando],ganancia_izq,ganancia_cent,ganancia_der);
+                      console.log("DEscifra subida:  canal -> " + canales[vector_canales[j] -bajando] + " ganancias -> " + ganancias[vector_canales[j]-bajando] + " k ->" + k);
+                      //console.log("Descifrando bajada:  -> " + vector_canales[j]+bajando);
+                      bajando++;
+                  }
+
+                  bajando = 2;
+
+                  console.log("bajada: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-bajando] + " gain ->" + ganancias[vector_canales[j]-bajando]  + " tiempo -> " + tiempo );
+
+              } else if ( vector_canales[j] < vector_canales[j+1] ){
+
+                  asignar_ganancia(1,canales[vector_canales[j]-bajando],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der);
+                  aux_baj_sub = vector_canales[j+1] - vector_canales[j]
+                  segmento = tiempo_canales[j]/(aux_baj_sub);
+                  subiendo = 0;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[vector_canales[j] + subiendo],tiempo,ganancias[vector_canales[j] + subiendo],ganancia_izq,ganancia_cent,ganancia_der);
+                      
+                      //console.log("DEscifra subida:  canal -> " + canales[vector_canales[j] + subiendo] + " ganancias -> " + ganancias[vector_canales[j]+ subiendo] + " k ->" + k);
+                      subiendo++;
+
+                  }
+                  subiendo = 0;
+
+                  console.log("subida: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]] + " gain ->" + ganancias[vector_canales[j]]  + " tiempo -> " + tiempo);
+
+              }
+          }
       
-          oscillator.connect(audioCtx.destination);
+          //oscillator.connect(audioCtx.destination);
+          merger.connect(audioCtx.destination);
           oscillator.start();
           oscillator.stop(t_final + vector_tiempo[vector_tiempo.length - 1])
-            
-            /*
 
-            console.log(vector_frecuencia);
-            console.log(vector_tiempo);
 
-            for(var i = 0; i < vector_frecuencia.length; i++){
-                t_final = t_final + vector_tiempo[i]; 
-                tocar_frecuencia(vector_frecuencia[i], t_inicial, t_final);
-                t_inicial = t_final;
-            }
-            */
+        }
+
+        function asignar_ganancia(tipo,canal,tiempo,val_gan,gana_izq,gana_cen,gana_der){
+
+          if(tipo == 1){
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal == 2):
+                  gana_cen.gain.setValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.setValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+               }
+          } else{
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal == 2):
+                  gana_cen.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  console.log("Entro con ganan " + val_gan);
+                  break;
+                }
+          }
+        }
+
+
+        function audio_espacial(){
+
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+          // create Oscillator node
+          const oscillator = audioCtx.createOscillator();
+
+          oscillator.type = 'square';
+          // 0 MONO
+          // LFE subwoofer
+          var ganancia_izq = audioCtx.createGain();  
+          var ganancia_der = audioCtx.createGain(); 
+          var ganancia_cent = audioCtx.createGain();
+          var ganancia_izq_surr = audioCtx.createGain(); 
+          var ganancia_der_surr = audioCtx.createGain(); 
+
+          var merger = audioCtx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_izq_surr);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+          ganancia_izq_surr.connect(merger, 0, 4);  
+          ganancia_der_surr.connect(merger, 0, 5);
+        
+          oscillator.frequency.setValueAtTime(300, 0);
+          //oscillator.frequency.setValueAtTime(1000, 2);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,0);
+          ganancia_izq.gain.setValueAtTime(0,0);
+          ganancia_cent.gain.setValueAtTime(0,0);
+          ganancia_der.gain.setValueAtTime(0,0);
+          ganancia_der_surr.gain.setValueAtTime(1,0);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,1);
+          ganancia_izq.gain.setValueAtTime(0,1);
+          ganancia_cent.gain.setValueAtTime(0,1);
+          ganancia_der.gain.setValueAtTime(1,1);
+          ganancia_der_surr.gain.setValueAtTime(0,1);
+
+          ganancia_izq.gain.setValueAtTime(0,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_cent.gain.setValueAtTime(1,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_der_surr.gain.setValueAtTime(0,2);
+          
+          merger.connect(audioCtx.destination);
+
+          //Connect Left and Right Nodes to the output  
+          //Assuming stereo as initial status
+
+          //splitter.connect(audioCtx.destination);
+          oscillator.start(0);
+          oscillator.stop(3);
 
         }
 
