@@ -107,7 +107,7 @@ function graficador(){
 //completa, 5ta y 6ta escala completa, se ascendera de 10 en 10 [Hz] de modo que el cambio sea notorio, pero no molesto.
 
 
-function escalador_frecuencias(){
+function escalador_frecuencias(tiempo_osc){
 
   var aux = 293.7;
   var frecuencias = [];
@@ -120,6 +120,8 @@ function escalador_frecuencias(){
             frecuencias[i+1] = 1976
         }
     }
+
+    Logger.log("Mis frecuencias: " + frecuencias);
     
     var datos = extraer_valores();
     //var datos_aux = [];
@@ -127,8 +129,9 @@ function escalador_frecuencias(){
     var len_frec = frecuencias.length;
     var count = 0;
     var distancia = distancia_puntos(datos);
+    var canales = eje_espacial(extraer_columnas(datos,"tiempo"));
 
-    //Logger.log(datos[0]);
+    Logger.log("Probando canal: " + canales);
     //Logger.log(datos);
 
     //saltarse primera columna porque contiene la escala en el eje x del grafico lineal.
@@ -137,7 +140,7 @@ function escalador_frecuencias(){
 
         for(var c = 1; c < (datos[0].length) ; c++){
             for(var f = 0; f < datos.length; f++){
-                datos[f][c] = ((Math.round(((datos[f][c] + (max_min_d[1]*(-1)))/(max_min_d[0] + (max_min_d[1]*(-1))))*(len_frec-1))) - (len_frec-1))*(-1);
+                datos[f][c] = (Math.round(((datos[f][c] + (max_min_d[1]*(-1)))/(max_min_d[0] + (max_min_d[1]*(-1))))*(len_frec-1)));
                 datos[f][c] = frecuencias[datos[f][c]];
                 count++;
             }
@@ -147,26 +150,28 @@ function escalador_frecuencias(){
 
         for(var c = 1; c < (datos[0].length) ; c++){
             for(var f = 0; f < datos.length; f++){
-                datos[f][c] = ((Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1))) - (len_frec-1))*(-1);
+                datos[f][c] = (Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1)));
                 datos[f][c] = frecuencias[datos[f][c]];
                 count++;
             }
         }
     }
 
-    //Logger.log(datos);
+    Logger.log(datos);
 
     let datos_aux = escalar_subida_bajada_frecuencias(datos,frecuencias);
     var datos_ref = extraer_columnas(datos,"frecuencias");
     datos_aux.push(datos_ref);
-    Logger.log(datos_ref)
-    var tiempo_f = escalador_tiempo(20,datos_aux,distancia);
+    Logger.log("Referencia" + datos_aux)
+    var tiempo_f = escalador_tiempo(tiempo_osc,datos_aux,distancia);
     //Logger.log("Longitud real: "+ datos_aux[0].length);
     //escalador_tiempo(1,datos);
     //Logger.log(datos_aux);
     //var entregar = [datos_aux,tiempo_f]
     //Logger.log(entregar);
-    return JSON.stringify([datos_aux,tiempo_f,datos_ref]);
+    Logger.log(tiempo_f)
+    Logger.log([datos_aux,tiempo_f[0],datos_ref,canales]);
+    return JSON.stringify([datos_aux,tiempo_f[0],datos_ref,canales,tiempo_f[1]]);
     //
 
 }
@@ -232,7 +237,7 @@ function escalador_tiempo(tiempo_esc,dat_frec,dist){
 
     //Logger.log("indices : " + vec_tiempo_t[0].length + '-' + dat_frec[0].length);
     //Logger.log("llenado : " + vec_tiempo_t[0].reduce((a, b) => a + b, 0));
-    return vec_tiempo_t;
+    return [vec_tiempo_t,dist];
 
 }
 
@@ -244,7 +249,7 @@ function entregador(t_total){
 
   //Logger.log("frec : " + frec_entr);
   //var tiem_esc =  escalador_tiempo(t_total,frec_entr,dist_graf)
-  var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias(),distancia_puntos(mi_data))];
+  var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias()[0],distancia_puntos(mi_data))];
 
   //Logger.log("tiempo : " + tiem_esc);
   Logger.log(entregar);
@@ -379,7 +384,80 @@ function distancia_puntos(matriz){
         dist = [];
         count = 0;
     }
+
     return dist_t;
+}
+
+// Funcion para obtener canales de audio sobre los cuales trabajar
+function eje_espacial(espacio_nw){
+    
+    //Logger.log("tiempo : " + espacio_nw);
+    
+    var r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
+
+    if(r_t_max_min[1] < 0){
+        for(var i = 0; i < espacio_nw.length; i++){
+            espacio_nw[i] = espacio_nw[i] + r_t_max_min[1];
+        }
+        r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
+    } 
+
+    //Logger.log("max : " + r_t_max_min);
+    
+    //Logger.log("vector :" + espacio_nw)
+  
+    var secciones = seccionador(r_t_max_min[0],r_t_max_min[1]);
+    //Logger.log("secciones: " + secciones);
+    var canales = [];
+
+    for( var j = 0; j < espacio_nw.length; j++ ){
+        
+        switch(true){
+          case (espacio_nw[j] >= secciones[0][0] && espacio_nw[j] < secciones[0][1]):
+            canales[j] = 1;
+            break;
+          case (espacio_nw[j] >= secciones[1][0] && espacio_nw[j] < secciones[1][1]):
+            canales[j] = 2;
+            break;
+          case (espacio_nw[j] >= secciones[2][0] && espacio_nw[j] < secciones[2][1]):
+            canales[j] = 3;
+            break;
+          case (espacio_nw[j] >= secciones[3][0] && espacio_nw[j] < secciones[3][1]):
+            canales[j] = 4;
+            break;
+          case (espacio_nw[j] >= secciones[4][0] && espacio_nw[j] < secciones[4][1]):
+            canales[j] = 5;
+            break;
+          case (espacio_nw[j] >= secciones[5][0] && espacio_nw[j] < secciones[5][1]):
+            canales[j] = 6;
+            break;
+          case (espacio_nw[j] >= secciones[6][0] && espacio_nw[j] <= secciones[6][1]):
+            canales[j] = 7;
+            break;
+        }
+        //Logger.log(canales[j])
+    }
+
+    return canales;
+}
+
+function seccionador(maximo, minimo){
+
+    var tam_secc = (maximo - minimo)/7
+    var ini_secc = tam_secc + minimo;
+
+    var secc1 = [minimo, ini_secc];
+    var secc2 = [ini_secc, ini_secc + tam_secc];
+    var secc3 = [ini_secc + tam_secc, ini_secc + (2*tam_secc)];
+    var secc4 = [ini_secc + (2*tam_secc), ini_secc + (3*tam_secc)];
+    var secc5 = [ini_secc + (3*tam_secc), ini_secc + (4*tam_secc)];
+    var secc6 = [ini_secc + (4*tam_secc), ini_secc + (5*tam_secc)];
+    var secc7 = [ini_secc + (5*tam_secc), ini_secc + (6*tam_secc)];
+
+
+    var secciones = [secc1,secc2,secc3,secc4,secc5,secc6,secc7];
+
+    return secciones;
 }
 
 
@@ -404,6 +482,43 @@ function tiempo_total(tiempo){
     return duracion;
 }
 
+function texto_a_voz(bytes){
+
+    const base64 = Utilities.base64Encode(bytes);
+    const data = {
+        'config' : {
+            'languageCode': 'es-ES',
+            'audio_channel_count': 2,  
+        },
+        'audio': {
+            'content' : base64
+        }
+
+    }
+
+    const params = {
+        'method' : 'post',
+        'headers': { 
+        "Content-Type": "application/json",
+    },
+        'payload' : JSON.stringify(data),
+  };
+
+    const res = UrlFetchApp.fetch('https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyBA6qflEf5lgVEyH55KXVDwiNP05W7aZjk', params);
+
+
+return JSON.parse(res.getContentText())['results'][0]['alternatives'][0]['transcript'];
+
+}
+
+function retornar_nombre(){
+
+    var aboutData = DriveApp.About.get();
+    var userEmail = aboutData["user"]["emailAddress"];
+    var userDisplayName = aboutData["user"]["displayName"];
+    Logger.log('Mi nombre : ' + userDisplayName);
+    return userDisplayName
+}
 
 /*
 function cargar_dtm() {
