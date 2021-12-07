@@ -1,528 +1,608 @@
-// ----------------------------------------------------------------------------------------------------------------------
-// -------------------- FUNCIONES DE CREACION DE ADD - ON DENTRO DE SPREADSHEETS ----------------------------------------
-// ----------------------------------------------------------------------------------------------------------------------
+<!DOCTYPE html>
 
-// Permite pasar datos entre el servidor y el cliente.
-function doGet() {
-var template = HtmlService.createTemplateFromFile('barra_add_on');
-
-return template.evaluate().setSandboxMode(HtmlService.SandboxMode.IFRAME);
-
-}
-
-function onOpen(e) {
-      SpreadsheetApp.getUi().createAddonMenu()
-          .addItem('Ejecutar Add-On', 'mostrarComplemento')
-          .addToUi();
-      mostrarComplemento()
-      //cargar_dtm();
-    }
-
-function onInstall(e) {
-      onOpen(e);
-    }
-
-function mostrarComplemento() {
-      var ui = HtmlService.createHtmlOutputFromFile('barra_add_on')
-          .setTitle('Add-On de interpretación gráfica')
-          .setSandboxMode(HtmlService.SandboxMode.IFRAME);
-      SpreadsheetApp.getUi().showSidebar(ui);
-    }
-
-
-
-/*function doGet(){
-
-    probador();
-
-    var template = HtmlService
-                 .createTemplateFromFile('barra_add_on');
-
-    var htmlOutput = template.evaluate()
-                   .setSandboxMode(HtmlService.SandboxMode.NATIVE);
-
-    return htmlOutput;
-
-    //return HtmlService.createHtmlOutputFromFile('barra_add_on');
-    
-    
-    return HtmlService
-      .createTemplateFromFile('barra_add_on')
-      .evaluate();
-`}`
-    */
-
-// ----------------------------------------------------------------------------------------------------------------------
-// -------------------- FUNCIONES DE CARACTER FUNCIONAL DEL ADD - ON ----------------------------------------------------
-// ----------------------------------------------------------------------------------------------------------------------
-
-function bienvenida() {
-      var ui = SpreadsheetApp.getUi();
-      ui.alert("Bienvenido al Add-On");
-    }
-
-
-function extraer_valores(){
+<html>
+  <script type="text/javascript" src="https://raw.githubusercontent.com/GTCMT/DataToMusicAPI/master/dtm.js"></script>
+  <head>
+  </head>
+  <body>
+    <p>Prueba de interfaz: </p>
+    <label> Tiempo: </label> <input type="text" id="tiempo">  
+    <!--
+    <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
+    -->
+    <br>
+    <p>Selector de Timbre: </p>
+    <select id="Timbre">
+    <option value="T1" selected>Timbre 1 (Única Señal)</option>
+    <option value="T2">Timbre 2 (2 Señales)</option>
+    <option value="T3">Timbre 3 (3 Señales)</option>
+    <option value="T4">Timbre 4 (4 Señales)</option>
+    </select>
+    <br>
+    <p>Manejo de  valores faltantes y caracteres especiales: </p>
+    <select id="Vacios">
+    <option value="O1" selected> Suavizar </option>
+    <option value="O2">Rellenar con promedio de la columna</option>
+    </select>
+    <!--
+    <input type="radio" id="uno" value="uno" name="timbre">Timbre con una señal<br>   
+    <input type="radio" id="dos" value="dos" name="timbre">Timbre mezclando dos señales<br>   
+    <input type="radio" id="tres" value="tres" name="timbre">Timbre mezclando tres señales<br>  
+    <input type="radio" id="cuatro" value="cuatro" name="timbre">Timbre mezclando cuatro señales<br><br> 
+    -->
+    <p> <input type="button" value="Comienza Sonificación!"
+      onclick="probando_gs()" /> </p>
       
-      var mi_app = SpreadsheetApp;
-      var hoja_actual = mi_app.getActiveSpreadsheet().getActiveSheet();
+    <hr>
+    <p>Selector de Gráfico: </p>
+    <select id="Tipo_Grafico">
+    <option value="G1" selected>Gráfico de Linea</option>
+    <option value="G2">Gráfico de Barras</option>
+    <option value="G3">Gráfico de Pastel</option>
+    <option value="G4">Gráfico de Dispersión</option>
+    </select>
 
-      //Se recogen las celdas que hayan sido seleccionadas.
-      var celdas = hoja_actual.getActiveRange().getValues();
-      return celdas;
-
-      /*
-      for(var i=0; i<(celdas[0]).length; i++){
-         datos.addColumn(Charts.ColumnType.NUMBER, celdas[0][i]);
-      }
-
-      for(var j=1; j<celdas.length; j++){
-         datos.addRow(celdas[j]);
-      }
-
-      Logger.log(datos);
-
-      */
-
-}
-
-function graficador(){
-
-      var mi_app = SpreadsheetApp;
-      var hoja_actual = mi_app.getActiveSpreadsheet().getActiveSheet();
-
-      var rango = hoja_actual.getActiveRange();
-
-      var g_linea = hoja_actual.newChart();
-
-      g_linea.addRange(rango)
-         .setChartType(Charts.ChartType.LINE)
-         .setOption('title','Mi gráfico de Linea!')
-         .setPosition(5, 5, 0, 0); 
-      hoja_actual.insertChart(g_linea.build());
-}
-
-// --------------------------------------------------------------------------------------------------------------------
-//Escalado desde 293.7 [Hz], D (RE) en 4ta escala, hasta 1976 [Hz], B (SI) en 6ta escala, se pasa la 4ta escala semi-
-//completa, 5ta y 6ta escala completa, se ascendera de 10 en 10 [Hz] de modo que el cambio sea notorio, pero no molesto.
-
-
-function escalador_frecuencias(tiempo_osc){
-
-  var aux = 293.7; 
-  var frecuencias = [];
-
-    for (var i = 0; i < Math.floor((1200/10)-(293.7/10)) + 1; i++) {
-        frecuencias[i] = aux;
-        aux = aux + 10;
-
-        if( frecuencias[i] + 10 > 1200 ){
-            frecuencias[i+1] = 1200
-        }
-    }
-
-    Logger.log("Mis frecuencias: " + frecuencias);
+    <!--
+    <p>Tratamiento de vacíos o caracteres especiales</p>
+    <label> Opcion: </label> <input type="text" id="vacios">  -->
     
-    var datos = extraer_valores();
-    //var datos_aux = [];
-    var max_min_d = max_min_mat(datos);
-    var len_frec = frecuencias.length;
-    var count = 0;
-    var distancia = distancia_puntos(datos);
-    var canales = eje_espacial(extraer_columnas(datos,"tiempo"));
-
-    Logger.log("Probando canal: " + canales);
-    //Logger.log(datos);
-
-    //saltarse primera columna porque contiene la escala en el eje x del grafico lineal.
-
-    if(max_min_d[1] < 0){
-
-        for(var c = 1; c < (datos[0].length) ; c++){
-            for(var f = 0; f < datos.length; f++){
-                datos[f][c] = (Math.round(((datos[f][c] + (max_min_d[1]*(-1)))/(max_min_d[0] + (max_min_d[1]*(-1))))*(len_frec-1)));
-                datos[f][c] = frecuencias[datos[f][c]];
-                count++;
-            }
-        }
-
-    }else{
-
-        for(var c = 1; c < (datos[0].length) ; c++){
-            for(var f = 0; f < datos.length; f++){
-                datos[f][c] = (Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1)));
-                datos[f][c] = frecuencias[datos[f][c]];
-                count++;
-            }
-        }
-    }
-
-    Logger.log(datos);
-
-    let datos_aux = escalar_subida_bajada_frecuencias(datos,frecuencias);
-    var datos_ref = extraer_columnas(datos,"frecuencias");
-    datos_aux.push(datos_ref);
-    Logger.log("Referencia" + datos_aux)
-    var tiempo_f = escalador_tiempo(tiempo_osc,datos_aux,distancia);
-    //Logger.log("Longitud real: "+ datos_aux[0].length);
-    //escalador_tiempo(1,datos);
-    //Logger.log(datos_aux);
-    //var entregar = [datos_aux,tiempo_f]
-    //Logger.log(entregar);
-    Logger.log(tiempo_f)
-    Logger.log([datos_aux,tiempo_f[0],datos_ref,canales]);
-    return JSON.stringify([datos_aux,tiempo_f[0],datos_ref,canales,tiempo_f[1]]);
-    //
-
-}
-
-function escalador_tiempo(tiempo_esc,dat_frec,dist){
-    var max_d = 0;
-    for(var i = 0; i < dist.length; i++){
-        max_d = dist[i].reduce((a, b) => a + b, 0);
-        for(var j = 0; j < dist[0].length; j++){
-            (dist[i])[j] = ((dist[i])[j]/max_d)*tiempo_esc;
-        }
-    }
+    <!--<p> <button type="button" id="detener">Detener Sonido</button> </p> -->
+    <p> <button type="button" onclick="google.script.run.graficador(document.getElementById('Tipo_Grafico').value)">Graficador</button> </p>
+    <hr>
+    <label> texto: </label> <input type="text" id="tts">  
+    <p> <button type="button" onclick="text_speach()">Probando texto a voz: </button> </p>
+    <p> <button type="button" onclick="google.script.run.escalador_frecuencias_barras(3,'O1')">Probador de funciones: </button> </p>
     
-    //Logger.log("escalado a 3 = " + dist);
-
-    var dat_frec_ref = dat_frec[dat_frec.length-1];
-    dat_frec.pop();
-    var cuenta = [];
-    var count = 0;
-    var ind = [];
-    var vec_tiempo = [];
-    var vec_tiempo_t = [];
-
-    //Logger.log("final");
-    //Logger.log(dat_frec_ref);
-
-    for(var c = 0; c < dat_frec.length; c++){
-        for(var f = 0; f < dat_frec[c].length; f++){
-          
-            if(dat_frec[c][f] == dat_frec_ref[c][count]){
-                ind[count] = f;
-                count++;
-            }
-        }
-        cuenta.push(ind);
-        ind = [];
-        count = 0;
-    }
-
-    //Logger.log('la cuenta es: ' +  cuenta);
-
-    count = -1;
-    for(var c = 0; c < dat_frec.length; c++){
-        for(var f = 0; f < dat_frec[c].length; f++){
-          
-            if(dat_frec[c][f] == dat_frec[c][cuenta[c][count+1]] && dat_frec[c][f] != dat_frec[c][cuenta[c][cuenta[c].length - 1]]){
-                
-                //mi_aux = cuenta[c][count]
-                count++;
-                //Logger.log("Cuenta: " + count);
-                vec_tiempo[f] = (dist[c][count])/(cuenta[c][count+1]-cuenta[c][count]);
-            }
-            else{
-                vec_tiempo[f] = (dist[c][count])/(cuenta[c][count+1]-cuenta[c][count]);
-            }
-        }
-        vec_tiempo_t.push(vec_tiempo);
-        vec_tiempo = [];
-        count = -1;
-    }
-
+    <!--
+    <p> <button type="button" onclick="prueba_dtm()">Prueba funciones programación</button> </p>
+    <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
+    -->
     
+    <script>
 
-    //Logger.log("indices : " + vec_tiempo_t[0].length + '-' + dat_frec[0].length);
-    //Logger.log("llenado : " + vec_tiempo_t[0].reduce((a, b) => a + b, 0));
-    return [vec_tiempo_t,dist];
-
-}
-
-function entregador(t_total){
-  
-  //var frec_entr = escalador_frecuencias();
-  //var dist_graf = distancia_puntos(extraer_valores());
-  var mi_data = extraer_valores();
-
-  //Logger.log("frec : " + frec_entr);
-  //var tiem_esc =  escalador_tiempo(t_total,frec_entr,dist_graf)
-  var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias()[0],distancia_puntos(mi_data))];
-
-  //Logger.log("tiempo : " + tiem_esc);
-  Logger.log(entregar);
-  return JSON.stringify(entregar);
-}
-
-function probador(){
-    var datos = escalador_frecuencias();
-    Logger.log(datos);
-    return JSON.stringify(datos);
-
-}
+        //Variables del generador de voz, text-to-speach:
+        var synthesis = window.speechSynthesis;
+        var voices = synthesis.getVoices();
+        var utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'es-ES';
+        utterance.voice = voices[1];
+        //
 
 
-
-
-// ----------------------------------------------------------------------------------------------------------------------
-// -------------------- FUNCIONES COMPLEMENTARIAS FUNDAMENTALES ---------------------------------------------------------
-// ----------------------------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------------------------------------------------------------------------
-// Funcion para calculo de maximo y minimo de una matriz (array multidimensional) ignorando la primera columna.
-
-function max_min_mat(matriz){
-    var max_min_local = [];
-    var cont = 0;
-
-    for(var c = 1; c < (matriz[0].length) ; c++){
-        for(var f = 0; f < matriz.length; f++){
-            max_min_local[cont] = matriz[f][c]
-            cont++; 
-        }
-    }
-
-    return [Math.max.apply(null,max_min_local),Math.min.apply(null,max_min_local)]
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// Función de completado de frecuencias, permite colocar frecuencias intermedias con el fin de evitar cambios demasiado
-// bruscos en la reproduccion del audio.
-
-function escalar_subida_bajada_frecuencias(matriz,frecuencias){
-    
-    var auxiliar = [];
-    var frec_fin = [];
-    var rango_din = [];
-    var count = 0;
-    
-    for(var c = 1; c < (matriz[0].length) ; c++){
-        for(var f = 0; f < matriz.length; f++){
-            if(f == (matriz.length-1)){
-              auxiliar[count] = matriz[f][c];
-            }
-            else if(matriz[f][c] > matriz [f+1][c]){
-
-                rango_din = frecuencias.slice(frecuencias.findIndex(element => element === matriz[f+1][c])+1,frecuencias.findIndex(element => element === matriz[f][c])+1);
-                rango_din = rango_din.sort((a, b) => b - a);
-
-                for(var d = 0; d < rango_din.length; d++){
-                    auxiliar[count] = rango_din[d];
-                    count++;
-                }
-                rango_din = [];
-            }
-            else{
-                
-                rango_din = frecuencias.slice(frecuencias.findIndex(element => element === matriz[f][c]),frecuencias.findIndex(element => element === matriz[f+1][c]));
-                rango_din = rango_din.sort((a, b) => a - b );
-
-                for(var d = 0; d < rango_din.length; d++){
-                    auxiliar[count] = rango_din[d];
-                    count++;
-                }
-                rango_din = [];
-            }
-            
-        }
-        frec_fin.push(auxiliar);
-        auxiliar = [];
-        count = 0;
-    }
-
-
-    return frec_fin;
-}
-
-// --------------------------------------------------------------------------------------------------------------------
-// Funcion para retornas las columnas de datos como un array de arrays de columnas, o devuelve la escala temporal como 
-// un unico array
-
-function extraer_columnas(datos,opcion){
-     
-    var datos_c = [];
-    var datos_ret = [];
-    
-    if(opcion == "tiempo"){
-        for(f = 0; f < datos.length; f++ ){
-            datos_c[f] = datos[f][0];
-        }
-        datos_ret = datos_c;
-    }
-    else{
-        for(c = 1; c < datos[0].length; c++ ){
-
-            for(f = 0; f < datos.length; f++){
-                datos_c[f] = datos[f][c];
-            }
-            datos_ret.push(datos_c);
-            datos_c = [];
-        }
-    }
-
-    return datos_ret;
-}
-
-// --------------------------------------------------------------------------------------------------------------------
-// Funcion para extraer la duración total del 
-
-function distancia_puntos(matriz){
-
-    var dist = [];
-    var dist_t = [];
-    var count = 0;
-
-    for(var c = 1; c < matriz[0].length ; c++){
-        for(var f = 0; f < matriz.length - 1; f++){
-            dist[count] = Math.sqrt(Math.pow(matriz[f+1][c] - matriz[f][c],2)+Math.pow(matriz[count+1][0]-matriz[count][0],2));
-            count++;
-        }
-        dist_t.push(dist);
-        dist = [];
-        count = 0;
-    }
-
-    return dist_t;
-}
-
-// Funcion para obtener canales de audio sobre los cuales trabajar
-function eje_espacial(espacio_nw){
-    
-    //Logger.log("tiempo : " + espacio_nw);
-    
-    var r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
-
-    if(r_t_max_min[1] < 0){
-        for(var i = 0; i < espacio_nw.length; i++){
-            espacio_nw[i] = espacio_nw[i] + r_t_max_min[1];
-        }
-        r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
-    } 
-
-    //Logger.log("max : " + r_t_max_min);
-    
-    //Logger.log("vector :" + espacio_nw)
-  
-    var secciones = seccionador(r_t_max_min[0],r_t_max_min[1]);
-    //Logger.log("secciones: " + secciones);
-    var canales = [];
-
-    for( var j = 0; j < espacio_nw.length; j++ ){
+        function probando_gs(){
         
-        switch(true){
-          case (espacio_nw[j] >= secciones[0][0] && espacio_nw[j] < secciones[0][1]):
-            canales[j] = 1;
-            break;
-          case (espacio_nw[j] >= secciones[1][0] && espacio_nw[j] < secciones[1][1]):
-            canales[j] = 2;
-            break;
-          case (espacio_nw[j] >= secciones[2][0] && espacio_nw[j] < secciones[2][1]):
-            canales[j] = 3;
-            break;
-          case (espacio_nw[j] >= secciones[3][0] && espacio_nw[j] < secciones[3][1]):
-            canales[j] = 4;
-            break;
-          case (espacio_nw[j] >= secciones[4][0] && espacio_nw[j] < secciones[4][1]):
-            canales[j] = 5;
-            break;
-          case (espacio_nw[j] >= secciones[5][0] && espacio_nw[j] < secciones[5][1]):
-            canales[j] = 6;
-            break;
-          case (espacio_nw[j] >= secciones[6][0] && espacio_nw[j] <= secciones[6][1]):
-            canales[j] = 7;
-            break;
-        }
-        //Logger.log(canales[j])
-    }
+        var tiempo = parseFloat(document.getElementById("tiempo").value);
+        var vacio = document.getElementById("Vacios").value;
+        var tipo_g = document.getElementById("Tipo_Grafico").value;
 
-    return canales;
-}
+        var dato = google.script.run.withSuccessHandler(
 
-function seccionador(maximo, minimo){
+          function (fuente) 
+           { 
+             var datazo =  JSON.parse(fuente);  // undefined
+             const frecuencias_f = datazo[0];
+             const tiempo_f = datazo[1];
+             const espacio_f = datazo[2];
 
-    var tam_secc = (maximo - minimo)/7
-    var ini_secc = tam_secc + minimo;
-
-    var secc1 = [minimo, ini_secc];
-    var secc2 = [ini_secc, ini_secc + tam_secc];
-    var secc3 = [ini_secc + tam_secc, ini_secc + (2*tam_secc)];
-    var secc4 = [ini_secc + (2*tam_secc), ini_secc + (3*tam_secc)];
-    var secc5 = [ini_secc + (3*tam_secc), ini_secc + (4*tam_secc)];
-    var secc6 = [ini_secc + (4*tam_secc), ini_secc + (5*tam_secc)];
-    var secc7 = [ini_secc + (5*tam_secc), ini_secc + (6*tam_secc)];
-
-
-    var secciones = [secc1,secc2,secc3,secc4,secc5,secc6,secc7];
-
-    return secciones;
-}
-
-
-// --------------------------------------------------------------------------------------------------------------------
-// Funcion para extraer la duración total del 
-
-function tiempo_total(tiempo){
-    
-    var aux = 0;
-    var duracion = 0;
-
-    for(t = 0; t < tiempo.length; t++){
-        if(tiempo[t] > aux){
-            aux = tiempo[t]
-            duracion = aux;
-        }
-        else{
-          duracion = aux + (aux - tiempo[t])
-        }
-    }
-
-    return duracion;
-}
-
-function texto_a_voz(bytes){
-
-    const base64 = Utilities.base64Encode(bytes);
-    const data = {
-        'config' : {
-            'languageCode': 'es-ES',
-            'audio_channel_count': 2,  
-        },
-        'audio': {
-            'content' : base64
+             console.log(frecuencias_f); // Escalamiento de Frecuencias
+             //ejecutador_graficos(frecuencias_f,tiempo_f,espacio_f,frecuencias_f.length);
+             console.log(tiempo_f);  // Escalamiento de tiempo
+             console.log(espacio_f);  //Eje espacial
+           }
+        ).colocador_datos(tiempo,vacio,tipo_g);
+          
+          //var datos_a = google.script.run.withSuccessHandler(pasoporServer).probador();
+          //console.log(dato);
         }
 
-    }
+        function ejecutador_graficos(vec_frecuencia,vec_tiempo,vec_canal,ejecuciones){
 
-    const params = {
-        'method' : 'post',
-        'headers': { 
-        "Content-Type": "application/json",
-    },
-        'payload' : JSON.stringify(data),
-  };
+          //console.log(vec_frecuencia[0]);
+          //console.log(vec_tiempo[0]);
+          //console.log(ejecuciones);
+          
+          let count = 1;
+          let tiempo_espera = 0;
+          let tiempo_tts = 0;
+          let texto = "";
+          let duracion_speach = 0;
 
-    const res = UrlFetchApp.fetch('https://speech.googleapis.com/v1/speech:recognize?key=AIzaSyBA6qflEf5lgVEyH55KXVDwiNP05W7aZjk', params);
+          var detener = document.getElementById("detener");
+
+          for(var i = 0; i < ejecuciones; i++){
+
+              
+              texto = "Gráfico número " + count
+              duracion_speach = (tiempo_speach(texto) + 1)*1000;
+              setTimeout(text_speach,tiempo_tts,texto);
+              console.log("Dura speach " + duracion_speach);
+              setTimeout(generar_audio_GLinea, tiempo_espera + 2000,vec_frecuencia[i], vec_tiempo[i],vec_canal);
+              tiempo_tts =  tiempo_tts  + vec_tiempo[i].reduce((a, b) => a + b, 0)*1000 + duracion_speach;//2500;
+              tiempo_espera = tiempo_tts; 
+              count++;
+            
+          }
+
+        }
+
+        function sonido_continuo(){
+            tocar_frecuencia(293.7,0,2);
+            tocar_frecuencia(1000,1,2);
+        }
+
+        function generar_audio_GLinea(vector_frecuencia,vector_tiempo,vector_canales){
+
+          //console.log("Tiempo total : " + tiempo_overlap)
+
+          var contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
+
+            
+          let t_inicial = 0;
+          let t_final = 0;
+          let ganancias = [ 0.1 , 0.45 , 0.9 , 1 , 0.9 , 0.45 , 0.1 ]; //Valor de Ganancia para 7 canales
+          let canales = [ 1 , 1 , 1 , 1 , 3 , 3 , 3 ]; //Correspondencias de Canal
+
+          // create Oscillator node
+          const oscillator1 = contexto_audio.createOscillator();
+          const oscillator2 = contexto_audio.createOscillator();
+          const oscillator3 = contexto_audio.createOscillator();
+          const oscillator4 = contexto_audio.createOscillator();
+
+          oscillator1.type = 'sine';
+          oscillator2.type = 'sine';
+          oscillator3.type = 'sine';
+          oscillator4.type = 'sine';
+
+          //console.log("llegan frecuencias " + vector_frecuencia);
+          let vec_frec1 = vector_frecuencia.map(x => x * 1);
+          //console.log("primera frec: " + vec_frec1);
+          let vec_frec2 = vector_frecuencia.map(x => x * 2);
+          //console.log("segunda frec: " + vec_frec2);
+          let vec_frec3 = vector_frecuencia.map(x => x * 3);
+          //console.log("tercera frec: " + vec_frec3);
+          let vec_frec4 = vector_frecuencia.map(x => x * 4);
+          //console.log("cuarta frec: " + vec_frec4);
+
+          //Evitar que comprobaciones en oscilador completo se desborden:
+          for( var i = 0; i < vec_frec1.length; i++){
+              if(vec_frec1[i] < 293.7){
+                  vec_frec1[i] = 2;
+              }
+              if(vec_frec2[i] < 293.7){
+                  vec_frec2[i] = 2;
+              }
+              if(vec_frec3[i] < 293.7){
+                  vec_frec3[i] = 2;
+              }
+              if(vec_frec4[i] < 293.7){
+                  vec_frec4[i] = 2;
+              }
+          }
+
+          let vec_gan1 = ganancias.map( x => x * 1);
+          let vec_gan2 = ganancias.map( x => x * 0.8);
+          let vec_gan3 = ganancias.map( x => x * 0.4);
+          let vec_gan4 = ganancias.map( x => x * 0.2);
+
+          let tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
+  
+          if(document.getElementById("Timbre").value == "T2"){
+
+              console.log("Entro a 2 timbres");
+
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+          }
+
+          else if(document.getElementById("Timbre").value == "T3"){
+
+              console.log("Entro a 3 timbres");
+
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+          }
+          else if(document.getElementById("Timbre").value == "T4")
+          {
+              console.log("Entro a 4 timbres");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3);
+              definir_oscilador_completo(contexto_audio,oscillator4,vec_frec4,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan4);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+              oscillator4.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+              oscillator4.stop(tiemp_final);
+
+          } else{
+          
+              oscillator1.start(0);
+              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
+              oscillator1.stop(tiemp_final);
+        
+          }
 
 
-return JSON.parse(res.getContentText())['results'][0]['alternatives'][0]['transcript'];
+        }
 
-}
+        function asignar_ganancia(tipo,canal,tiempo,val_gan,gana_izq,gana_cen,gana_der,t_overlap){
 
-function retornar_nombre(){
+          if(tipo == 1){
 
-    var aboutData = DriveApp.About.get();
-    var userEmail = aboutData["user"]["emailAddress"];
-    var userDisplayName = aboutData["user"]["displayName"];
-    Logger.log('Mi nombre : ' + userDisplayName);
-    return userDisplayName
-}
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  /*
+                  gana_cen.gain.setValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.setValueAtTime(0,tiempo + t_overlap);
+                  */
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
 
-/*
-function cargar_dtm() {
-      var javascript = UrlFetchApp.fetch("https://code.highcharts.com/modules/sonification.js").getContentText();
-      eval(javascript);
-}
-*/
+                case (canal == 2):
+                  gana_cen.gain.setValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+               }
+          } else{
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal == 2):
+                  gana_cen.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                }
+          }
+        }
+
+
+        function definir_oscilador_completo(audio_ctx,oscillator,vector_frecuencia,t_final,t_inicial,vector_tiempo,vector_canales,canales,ganancias){
+          //console.log("Entra con frecuencias : " + vector_frecuencia)
+
+          var ganancia_izq = audio_ctx.createGain();  
+          var ganancia_der = audio_ctx.createGain(); 
+          var ganancia_cent = audio_ctx.createGain();
+          var cont = 0;
+          var cont_aux = 0; 
+
+          var merger = audio_ctx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+
+          for(var i = 0; i < vector_frecuencia.length; i++){
+
+              //Definicion para los demas casos, se acumula en caso 2 (suavizado):
+              if(vector_frecuencia[i] != 2){
+
+                  //Frecuencia inicial
+                  if(i == 0 || cont_aux == 0){
+                      oscillator.frequency.setValueAtTime(vector_frecuencia[i], t_inicial);
+                  }
+                  else{
+                      t_final = t_final + vector_tiempo[cont];
+                      oscillator.frequency.linearRampToValueAtTime(vector_frecuencia[i], t_final); // value in hertz
+                      cont++;
+                  }
+                  cont_aux = 1;
+              }
+              else{
+                t_final = t_final + vector_tiempo[cont]
+                cont++;
+              } 
+
+                //t_inicial = t_final;
+          }
+
+          //Generar for para ganancias
+          let count = 0;
+          let tiempo = 0;
+          let aux_baj_sub = 0;
+          //var dur_div = []
+          let segmento = 0;
+          let bajando = 0;
+          let subiendo = 0;
+          let can_aux = [];
+          let tiempo_aux = [];
+          let frec_aux = [];
+          //console.log("Tiempo :" + vector_tiempo);
+          //console.log("Canales :" + vector_canales);
+          //console.log("Frecuencias : " + vector_frecuencia);
+          
+          cont_aux = 0;
+
+          for(var j = 0; j < can_aux.length; j++){
+              
+              can_aux[j] = 0;
+              tiempo_aux[j] = 0;
+              frec_aux[j] = 0
+
+              if(frec_aux[j+1] == 2 && frec_aux[j] != 2){
+                  tiempo_aux[j+1] = (vector_tiempo[j]) + (vector_tiempo[j+1]);
+                  can_aux[j+1] = vector_canales[j];
+                  frec_aux[j+1] = vector_frecuencia[j]; 
+              }
+              else if(frec_aux[j+1] == 2 && frec_aux[j] == 2){
+                  //tiempo_aux[j+1] = tiempo_aux[j] + tiempo_aux[j+1];
+                  //can_aux[j+1] = can_aux[j];
+              }
+              else if(frec_aux[j+1] != 2 && frec_aux[j] == 2){
+                  //tiempo_aux[j+1] = tiempo_aux[j] + tiempo_aux[j+1];
+              }
+              else if(frec_aux[j+1] != 2 && frec_aux[j] != 2){
+
+                //console.log("Entra con canal:  " + can_aux[j] + " - a tiempo : " + tiempo_aux[j]);
+
+              if( tiempo == 0 || cont_aux == 0){
+                  
+                  asignar_ganancia(1,canales[can_aux[j]-1],0,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.02);
+                  //tiempo = tiempo + tiempo_canales[j];
+                  //console.log("inicio: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-1] + " gain ->" + ganancias[vector_canales[j]-1] + " tiempo ->" + tiempo);
+                 
+              } 
+              
+              if(j == can_aux.length - 1 ){
+
+                //console.log("Final Conseguido!");
+
+              } else if( can_aux[j] == can_aux[j+1] ){
+                  asignar_ganancia(1,canales[can_aux[j]-1],tiempo,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,(vector_tiempo[j])*0.1);
+                  tiempo = tiempo + tiempo_aux[j];
+
+                  //console.log("igual: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-1] + " gain ->" + ganancias[vector_canales[j]-1]  + " tiempo ->" + tiempo);
+
+              } else if( can_aux[j] > can_aux[j+1]){
+
+                  //asignar_ganancia(1,canales[vector_canales[j]-1],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.1);
+
+                  aux_baj_sub = can_aux[j] - can_aux[j+1];
+                  segmento = tiempo_aux[j]/(aux_baj_sub);
+                  bajando  = 2;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[can_aux[j]-bajando],tiempo,ganancias[can_aux[j]-bajando],ganancia_izq,ganancia_cent,ganancia_der,vector_tiempo[j]*0.1);
+                      //console.log("DEscifra subida:  canal -> " + canales[vector_canales[j] -bajando] + " ganancias -> " + ganancias[vector_canales[j]-bajando] + " k ->" + k);
+                      //console.log("Descifrando bajada:  -> " + vector_canales[j]+bajando);
+                      bajando++;
+                  }
+
+                  bajando = 2;
+
+                  //console.log("bajada: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-bajando] + " gain ->" + ganancias[vector_canales[j]-bajando]  + " tiempo -> " + tiempo );
+
+              } else if ( can_aux[j] < can_aux[j+1] ){
+
+                 // asignar_ganancia(1,canales[vector_canales[j]-bajando],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.05);
+                  aux_baj_sub = can_aux[j+1] - can_aux[j]
+                  segmento = tiempo_aux[j]/(aux_baj_sub);
+                  subiendo = 0;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[can_aux[j] + subiendo],tiempo,ganancias[can_aux[j] + subiendo],ganancia_izq,ganancia_cent,ganancia_der,vector_tiempo[j]*0.1);
+                      
+                      //console.log("DEscifra subida:  canal -> " + canales[vector_canales[j] + subiendo] + " ganancias -> " + ganancias[vector_canales[j]+ subiendo] + " k ->" + k);
+                      subiendo++;
+
+                  }
+                  subiendo = 0;
+
+                  //console.log("subida: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]] + " gain ->" + ganancias[vector_canales[j]]  + " tiempo -> " + tiempo);
+
+              }
+
+
+            
+            }
+            cont_aux = 1;
+
+          }
+          
+          //oscillator.connect(audioCtx.destination);
+          merger.connect(audio_ctx.destination);
+          
+          return t_final;
+
+
+        }
+
+
+        function audio_espacial(){
+
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+          // create Oscillator node
+          const oscillator = audioCtx.createOscillator();
+
+          oscillator.type = 'square';
+          // 0 MONO
+          // LFE subwoofer
+          var ganancia_izq = audioCtx.createGain();  
+          var ganancia_der = audioCtx.createGain(); 
+          var ganancia_cent = audioCtx.createGain();
+          var ganancia_izq_surr = audioCtx.createGain(); 
+          var ganancia_der_surr = audioCtx.createGain(); 
+
+          var merger = audioCtx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_izq_surr);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+          ganancia_izq_surr.connect(merger, 0, 4);  
+          ganancia_der_surr.connect(merger, 0, 5);
+        
+          oscillator.frequency.setValueAtTime(300, 0);
+          //oscillator.frequency.setValueAtTime(1000, 2);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,0);
+          ganancia_izq.gain.setValueAtTime(0,0);
+          ganancia_cent.gain.setValueAtTime(0,0);
+          ganancia_der.gain.setValueAtTime(0,0);
+          ganancia_der_surr.gain.setValueAtTime(1,0);
+
+          ganancia_izq_surr.gain.setValueAtTime(0,1);
+          ganancia_izq.gain.setValueAtTime(0,1);
+          ganancia_cent.gain.setValueAtTime(0,1);
+          ganancia_der.gain.setValueAtTime(1,1);
+          ganancia_der_surr.gain.setValueAtTime(0,1);
+
+          ganancia_izq.gain.setValueAtTime(0,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_cent.gain.setValueAtTime(1,2);
+          ganancia_der.gain.setValueAtTime(0,2);
+          ganancia_der_surr.gain.setValueAtTime(0,2);
+          
+          merger.connect(audioCtx.destination);
+
+          //Connect Left and Right Nodes to the output  
+          //Assuming stereo as initial status
+
+          //splitter.connect(audioCtx.destination);
+          oscillator.start(0);
+          oscillator.stop(3);
+
+
+        }
+
+        function my_dtm(){
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var channels = 2;
+            // Create an empty two second stereo buffer at the
+            // sample rate of the AudioContext
+            var frameCount = audioCtx.sampleRate * 2.0;
+
+            var myArrayBuffer = audioCtx.createBuffer(channels, frameCount, audioCtx.sampleRate);
+            let num_2 = 0.05;
+
+            for (var channel = 0; channel < channels; channel++) {
+            // This gives us the actual ArrayBuffer that contains the data
+            var nowBuffering = myArrayBuffer.getChannelData(channel);
+               for (var i = 0; i < frameCount; i++) {
+                  // Math.random() is in [0; 1.0]
+                  // audio needs to be in [-1.0; 1.0]
+                  nowBuffering[i] = 1;
+                }
+            }
+
+            // Get an AudioBufferSourceNode.
+           // This is the AudioNode to use when we want to play an AudioBuffer
+           var source = audioCtx.createBufferSource();
+          // set the buffer in the AudioBufferSourceNode
+          source.buffer = myArrayBuffer;
+          // connect the AudioBufferSourceNode to the
+          // destination so we can hear the sound
+          source.connect(audioCtx.destination);
+          // start the source playing
+          source.start();
+        }
+        
+        /*
+        function probando_audioBuffer(){
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+
+            //Sonido de 1/2 (0,5) segundos
+            var myArrayBuffer = context.createBuffer(2,22050, 44100);
+            var nowBuffering = myArrayBuffer.getChannelData(1);
+            nowBuffering[1] = [100,200,300];
+
+        }
+        */
+
+
+        function ejecutar_despues(tiempo_muerto){
+            return new Promise(resolve => setTimeout(resolve, tiempo_muerto));
+        }
+
+        function detener_audio(){
+
+            /*
+            if (contexto_audio.state === 'running') {
+                contexto_audio.suspend();
+            }
+            */
+            return;
+        }
+
+        function text_speach(mensaje){
+            //var mensaje = document.getElementById("tts").value
+            // This overrides the text "Hello World" and is uttered instead
+            //utterance.text = "My name is Glad.";
+            //Speak Rate 1 por defecto, correspondiente a 180 a 220 palabras por minuto
+            utterance.text = mensaje;
+            synthesis.speak(utterance);
+
+        }
+
+        function tiempo_speach(mensaje){
+            //Speak Rate 1 por defecto, correspondiente a 150 a 220 palabras por minuto [wpm] 
+            let wps = 100 / 60;
+            return mensaje.split(" ").length/wps;
+
+        }
+
+    </script>
+  </body>
+</html>
