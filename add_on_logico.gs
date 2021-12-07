@@ -69,37 +69,59 @@ function extraer_valores(){
 
       //Se recogen las celdas que hayan sido seleccionadas.
       var celdas = hoja_actual.getActiveRange().getValues();
+      
       return celdas;
-
-      /*
-      for(var i=0; i<(celdas[0]).length; i++){
-         datos.addColumn(Charts.ColumnType.NUMBER, celdas[0][i]);
-      }
-
-      for(var j=1; j<celdas.length; j++){
-         datos.addRow(celdas[j]);
-      }
-
-      Logger.log(datos);
-
-      */
 
 }
 
-function graficador(){
+function graficador(tipo){
 
       var mi_app = SpreadsheetApp;
       var hoja_actual = mi_app.getActiveSpreadsheet().getActiveSheet();
 
       var rango = hoja_actual.getActiveRange();
 
-      var g_linea = hoja_actual.newChart();
+      if(tipo == "G1"){
 
-      g_linea.addRange(rango)
-         .setChartType(Charts.ChartType.LINE)
-         .setOption('title','Mi gráfico de Linea!')
-         .setPosition(5, 5, 0, 0); 
-      hoja_actual.insertChart(g_linea.build());
+          var g_linea = hoja_actual.newChart();
+
+          g_linea.addRange(rango)
+            .setChartType(Charts.ChartType.LINE)
+            .setOption('title','Mi gráfico de Linea!')
+            .setOption('interpolateNulls',true)
+            .setPosition(5, 5, 0, 0); 
+          hoja_actual.insertChart(g_linea.build());
+
+      }
+      else if(tipo == "G2"){
+          var g_barra = hoja_actual.newChart()
+
+          g_barra.addRange(rango)
+            .setChartType(Charts.ChartType.BAR)
+            .setOption('title','Mi gráfico de Barras')
+            .setPosition(5,5,0,0);
+          hoja_actual.insertChart(g_barra.build());
+      }
+      else if(tipo == "G3"){
+          var g_pastel = hoja_actual.newChart()
+
+          g_pastel.addRange(rango)
+            .setChartType(Charts.ChartType.PIE)
+            .setOption('title','Mi gráfico de Pastel')
+            .setPosition(5,5,0,0);
+          hoja_actual.insertChart(g_pastel.build());
+      }
+      else if(tipo == "G4"){
+
+          var g_dispersion = hoja_actual.newChart()
+
+          g_dispersion.addRange(rango)
+            .setChartType(Charts.ChartType.SCATTER)
+            .setOption('title','Mi gráfico de Dispersion')
+            .setPosition(5,5,0,0);
+          hoja_actual.insertChart(g_dispersion.build());
+      }
+
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -107,7 +129,7 @@ function graficador(){
 //completa, 5ta y 6ta escala completa, se ascendera de 10 en 10 [Hz] de modo que el cambio sea notorio, pero no molesto.
 
 
-function escalador_frecuencias(tiempo_osc){
+function escalador_frecuencias(tiempo_osc,tipo_vacio){
 
   var aux = 293.7; 
   var frecuencias = [];
@@ -121,17 +143,26 @@ function escalador_frecuencias(tiempo_osc){
         }
     }
 
-    Logger.log("Mis frecuencias: " + frecuencias);
+    //Logger.log("Mis frecuencias: " + frecuencias);
     
     var datos = extraer_valores();
+    Logger.log("Datos llegan: " + datos);
+    //Verificar si se tiene mas de una columna, caso contrario rellenar la primera columna
+    datos = retornar_varias_columnas(datos);
+    Logger.log("Verifica 2 columnas: " + datos);
+    datos = identificar_vacios_especial(datos,tipo_vacio);
+    Logger.log("Se devuelven al final: " + datos);
+    var puntos_frec = [];
+    var puntos_frec_it = [];
     //var datos_aux = [];
     var max_min_d = max_min_mat(datos);
     var len_frec = frecuencias.length;
     var count = 0;
+    var count1 = 0;
     var distancia = distancia_puntos(datos);
     var canales = eje_espacial(extraer_columnas(datos,"tiempo"));
 
-    Logger.log("Probando canal: " + canales);
+    //Logger.log("Probando canal: " + canales);
     //Logger.log(datos);
 
     //saltarse primera columna porque contiene la escala en el eje x del grafico lineal.
@@ -140,126 +171,181 @@ function escalador_frecuencias(tiempo_osc){
 
         for(var c = 1; c < (datos[0].length) ; c++){
             for(var f = 0; f < datos.length; f++){
-                datos[f][c] = (Math.round(((datos[f][c] + (max_min_d[1]*(-1)))/(max_min_d[0] + (max_min_d[1]*(-1))))*(len_frec-1)));
-                datos[f][c] = frecuencias[datos[f][c]];
-                count++;
+                if(datos[f][c] == "NO" && tipo_vacio == "O1"){
+                  puntos_frec_it[f] = 2;
+                }
+                else{
+                    datos[f][c] = (Math.round(((datos[f][c] + (max_min_d[1]*(-1)))/(max_min_d[0] + (max_min_d[1]*(-1))))*(len_frec-1)));
+                    puntos_frec_it[f] = frecuencias[datos[f][c]];
+                    datos[f][c] = frecuencias[datos[f][c]];
+                }
             }
+                puntos_frec.push(puntos_frec_it);
+                puntos_frec_it = [];
         }
 
     }else{
 
         for(var c = 1; c < (datos[0].length) ; c++){
             for(var f = 0; f < datos.length; f++){
-                datos[f][c] = (Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1)));
-                datos[f][c] = frecuencias[datos[f][c]];
-                count++;
+                if(datos[f][c] == "NO" && tipo_vacio == "O1"){
+                    puntos_frec_it[f] = 2;
+                }
+                else{
+                    datos[f][c] = (Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1)));
+                    puntos_frec_it[f] = frecuencias[datos[f][c]];
+                    datos[f][c] = frecuencias[datos[f][c]];
+                    //count++;
+                }
             }
+                puntos_frec.push(puntos_frec_it);
+                puntos_frec_it = [];
         }
     }
 
-    Logger.log(datos);
+    //Logger.log("Mis Datos :" + puntos_frec);
 
-    let datos_aux = escalar_subida_bajada_frecuencias(datos,frecuencias);
-    var datos_ref = extraer_columnas(datos,"frecuencias");
-    datos_aux.push(datos_ref);
-    Logger.log("Referencia" + datos_aux)
-    var tiempo_f = escalador_tiempo(tiempo_osc,datos_aux,distancia);
+    //let datos_aux = escalar_subida_bajada_frecuencias(datos,frecuencias);
+    //var datos_ref = extraer_columnas(datos,"frecuencias");
+    //datos_aux.push(datos_ref);
+    //Logger.log("Referencia" + datos_aux);
+    //Logger.log(distancia);
+    var tiempo_f = escalador_tiempo(tiempo_osc,distancia);
     //Logger.log("Longitud real: "+ datos_aux[0].length);
     //escalador_tiempo(1,datos);
     //Logger.log(datos_aux);
     //var entregar = [datos_aux,tiempo_f]
     //Logger.log(entregar);
-    Logger.log(tiempo_f)
-    Logger.log([datos_aux,tiempo_f[0],datos_ref,canales]);
-    return JSON.stringify([datos_aux,tiempo_f[0],datos_ref,canales,tiempo_f[1]]);
+    //Logger.log(tiempo_f);
+    //Logger.log([datos_aux,tiempo_f[0],datos_ref,canales]);
+    return [puntos_frec,tiempo_f,canales];
     //
 
 }
 
-function escalador_tiempo(tiempo_esc,dat_frec,dist){
+
+function escalador_tiempo(tiempo_esc,dist){
     var max_d = 0;
+    var tiempo_it = [];
+    var tiemp_final = [];
+    var count = 0;
+
     for(var i = 0; i < dist.length; i++){
         max_d = dist[i].reduce((a, b) => a + b, 0);
-        for(var j = 0; j < dist[0].length; j++){
+        for(var j = 0; j < dist[i].length; j++){
             (dist[i])[j] = ((dist[i])[j]/max_d)*tiempo_esc;
+            tiempo_it[count] = (dist[i])[j];
+            count++;
         }
-    }
-    
-    //Logger.log("escalado a 3 = " + dist);
-
-    var dat_frec_ref = dat_frec[dat_frec.length-1];
-    dat_frec.pop();
-    var cuenta = [];
-    var count = 0;
-    var ind = [];
-    var vec_tiempo = [];
-    var vec_tiempo_t = [];
-
-    //Logger.log("final");
-    //Logger.log(dat_frec_ref);
-
-    for(var c = 0; c < dat_frec.length; c++){
-        for(var f = 0; f < dat_frec[c].length; f++){
-          
-            if(dat_frec[c][f] == dat_frec_ref[c][count]){
-                ind[count] = f;
-                count++;
-            }
-        }
-        cuenta.push(ind);
-        ind = [];
+        tiemp_final.push(tiempo_it);
+        tiempo_it = [];
         count = 0;
     }
-
-    //Logger.log('la cuenta es: ' +  cuenta);
-
-    count = -1;
-    for(var c = 0; c < dat_frec.length; c++){
-        for(var f = 0; f < dat_frec[c].length; f++){
-          
-            if(dat_frec[c][f] == dat_frec[c][cuenta[c][count+1]] && dat_frec[c][f] != dat_frec[c][cuenta[c][cuenta[c].length - 1]]){
-                
-                //mi_aux = cuenta[c][count]
-                count++;
-                //Logger.log("Cuenta: " + count);
-                vec_tiempo[f] = (dist[c][count])/(cuenta[c][count+1]-cuenta[c][count]);
-            }
-            else{
-                vec_tiempo[f] = (dist[c][count])/(cuenta[c][count+1]-cuenta[c][count]);
-            }
-        }
-        vec_tiempo_t.push(vec_tiempo);
-        vec_tiempo = [];
-        count = -1;
-    }
-
     
-
-    //Logger.log("indices : " + vec_tiempo_t[0].length + '-' + dat_frec[0].length);
-    //Logger.log("llenado : " + vec_tiempo_t[0].reduce((a, b) => a + b, 0));
-    return [vec_tiempo_t,dist];
+    Logger.log("escalado a 3 = " + tiemp_final);
+    return tiemp_final;
 
 }
 
 function entregador(t_total){
   
-  //var frec_entr = escalador_frecuencias();
-  //var dist_graf = distancia_puntos(extraer_valores());
-  var mi_data = extraer_valores();
+    //var frec_entr = escalador_frecuencias();
+    //var dist_graf = distancia_puntos(extraer_valores());
+    var mi_data = extraer_valores();
 
-  //Logger.log("frec : " + frec_entr);
-  //var tiem_esc =  escalador_tiempo(t_total,frec_entr,dist_graf)
-  var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias()[0],distancia_puntos(mi_data))];
+    //Logger.log("frec : " + frec_entr);
+    //var tiem_esc =  escalador_tiempo(t_total,frec_entr,dist_graf)
+    var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias()[0],distancia_puntos(mi_data))];
 
-  //Logger.log("tiempo : " + tiem_esc);
-  Logger.log(entregar);
-  return JSON.stringify(entregar);
+    //Logger.log("tiempo : " + tiem_esc);
+    Logger.log(entregar);
+    return JSON.stringify(entregar);
 }
 
 function probador(){
     var datos = escalador_frecuencias();
     Logger.log(datos);
     return JSON.stringify(datos);
+
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+// FUNCIONES GRAFICO DE BARRAS
+
+function escalador_frecuencias_barras(tiempo_esc,tipo_vacio){
+
+    let datos_barras = extraer_valores();
+    datos_barras = retornar_varias_columnas(datos_barras);
+    let frec_baras_aux = [];
+    let frec_baras = [];
+    let sumas = [];
+    let cabecera = [];
+    
+    //Colocando frecuencia a las barras;
+    for(var f = 0; f < datos_barras.length; f++){
+        cabecera[f] = datos_barras[f][0];
+        sumas[f] = 0;
+        for(var c = 1; c < datos_barras[f].length; c++){
+            frec_baras_aux[c-1] = 293.7 + (10*(datos_barras.length - f));
+
+            if(typeof datos_barras[f][c] == 'number'){
+                sumas[f] = sumas[f] +  datos_barras[f][c];
+            }
+        }
+        frec_baras.push(frec_baras_aux);
+        frec_baras_aux = [];
+    }
+
+    let max_min_bar = max_min_mat(datos_barras);
+
+    if(Math.abs(max_min_bar[1]) > max_min_bar[0]){
+        max_min_bar[0] = Math.abs(max_min_bar[1]);
+    }
+
+    Logger.log("Máximo  : " + max_min_bar[0])
+    let tiem_bar_aux = [];
+    let tiem_bar = [];
+
+    for(var f = 0; f < datos_barras.length; f++){
+        for(var c = 1; c < datos_barras[f].length; c++){
+
+            if(tipo_vacio == "O1" && (datos_barras[f][c] == '' || typeof datos_barras[f][c] != 'number')){
+                tiem_bar_aux[c-1] = 0;
+            }
+            else if(tipo_vacio == "O1" && (datos_barras[f][c] == '' || typeof datos_barras[f][c] != 'number')){
+                tiem_bar_aux[c-1] = sumas[f]/(datos_barras[f].length-1);
+            }
+            else{
+                
+                tiem_bar_aux[c-1] = Math.abs((datos_barras[f][c] * tiempo_esc)/max_min_bar[0]);
+            }
+
+        }
+        tiem_bar.push(tiem_bar_aux);
+        tiem_bar_aux = [];
+    }
+
+    let entregador_auxiliar_t = [];
+    let entregador_auxiliar_c = [];
+    let tiempo_entrega = [];
+    let canal_entrega = [];
+
+    for(var f = 0; f < datos_barras.length; f++){
+        for(var c = 1; c < datos_barras[f].length; c++){
+            entregador_auxiliar_c[c-1] = eje_espacial_barras(max_min_bar[0],datos_barras[f][c],tiem_bar[f][c-1])[0];
+            entregador_auxiliar_t[c-1] = eje_espacial_barras(max_min_bar[0],datos_barras[f][c],tiem_bar[f][c-1])[1];
+        }
+        canal_entrega.push(entregador_auxiliar_c);
+        tiempo_entrega.push(entregador_auxiliar_t);
+        entregador_auxiliar_t = [];
+        entregador_auxiliar_c = [];
+    }
+
+    //Logger.log(tiem_bar)
+    //Logger.log(tiempo_entrega);
+    //Logger.log(canal_entrega);
+    //Logger.log(frec_baras);
+    return [frec_baras,tiempo_entrega,canal_entrega,cabecera]
 
 }
 
@@ -279,8 +365,11 @@ function max_min_mat(matriz){
 
     for(var c = 1; c < (matriz[0].length) ; c++){
         for(var f = 0; f < matriz.length; f++){
+
+            if(matriz[f][c] != "NO"){
             max_min_local[cont] = matriz[f][c]
             cont++; 
+            }
         }
     }
 
@@ -377,8 +466,14 @@ function distancia_puntos(matriz){
 
     for(var c = 1; c < matriz[0].length ; c++){
         for(var f = 0; f < matriz.length - 1; f++){
-            dist[count] = Math.sqrt(Math.pow(matriz[f+1][c] - matriz[f][c],2)+Math.pow(matriz[count+1][0]-matriz[count][0],2));
-            count++;
+            if(matriz[f][c] == "NO" || matriz[f+1][c] == "NO"){
+                dist[count] = Math.abs(matriz[count+1][0]-matriz[count][0]);
+                count++;
+            }
+            else{
+                dist[count] = Math.sqrt(Math.pow(matriz[f+1][c] - matriz[f][c],2)+Math.pow(matriz[count+1][0]-matriz[count][0],2));
+                count++;
+            }
         }
         dist_t.push(dist);
         dist = [];
@@ -460,6 +555,40 @@ function seccionador(maximo, minimo){
     return secciones;
 }
 
+function eje_espacial_barras(maxim,dato,tiempo){
+
+    let ref_canal = 7; 
+    let canal = (dato*ref_canal)/maxim;
+    let canal_dato = [];
+    let segmento = 0;
+    let t_final = [];
+
+    if(canal > 0){
+
+        canal = Math.ceil(canal);
+
+        for(var i = 1; i <= canal; i++){
+            canal_dato[i-1] = i;
+        }
+    }else{
+
+        canal = Math.ceil(Math.abs(canal));
+
+        for(var j = 0; j < canal; j++){
+            canal_dato[j] = ref_canal - j;
+        }
+    }
+
+    segmento = tiempo/canal_dato.length;
+
+    for(var t=0; t < canal_dato.length; t++){
+      t_final[t] = segmento;
+    }
+
+    return [canal_dato,t_final];
+
+}
+
 
 // --------------------------------------------------------------------------------------------------------------------
 // Funcion para extraer la duración total del 
@@ -510,6 +639,142 @@ function texto_a_voz(bytes){
 return JSON.parse(res.getContentText())['results'][0]['alternatives'][0]['transcript'];
 
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------
+//Funcion de correccion de espacios vacios o caracteres especiales, si se encuentra un espacio vacio o un caracter especial, se
+//reemplaza por el promedio de los datos existentes o se coloca el delimitador "NO" para ser procesado posteriormente. Si toda la
+//columna esta vacía, se elimina la columna del procesamiento, los datos originales no se afectan.
+
+function identificar_vacios_especial(datos,tipo_reemplazo){
+    
+    let count = [];
+
+
+    for(var f = 0; f < datos.length; f++){
+
+        if(datos[f][0] == "" || typeof datos[f][c] != 'number'){
+            datos.splice(f,1);
+        }
+
+        for(var c = 1; c < datos[0].length; c++){
+
+            if(f == 0){
+              count[c] = 0;
+            }
+       
+            //Separador de numeros es la "," si se coloca "." el entorno lo reconoce como si fuera una fecha, 1.5 -> 01/05/2021
+            if(typeof datos[f][c] != 'number' || datos[f][c] == ''){
+                datos[f][c] = "NO"
+      
+                //Si toda la columna esta vacia o esta llena de strings se ignora toda la columna:
+                count[c] = count[c] + 1;
+                Logger.log("Entra contador " + count[c])          
+              
+                if(count[c] == datos.length){
+                    
+                    for(var i = 0; i < datos.length; i++){
+                        datos[i].splice(c, 1);
+                    }
+                    count[c] = 0;
+                }
+            }
+        }
+    }
+    
+    //CASO 1: dichos valores se reemplazaran por el promedio de los valores existentes 
+    if(tipo_reemplazo == "O2"){
+      
+        Logger.log("Entro")
+    
+        let promedios = [];
+        let suma = [];
+      
+        //Calcula el promedio de las columnas:
+        for(var f = 0; f < datos.length; f++){
+
+            for(var c = 1; c < datos[0].length; c++){
+
+                if( f == 0){
+                    suma[c] = 0
+                }
+                
+                if(datos[f][c] != "NO"){
+                suma[c] = suma[c] + datos[f][c];
+                }
+                
+                if(f == datos.length - 1){
+                    promedios[c] = suma[c]/count[c];
+                    Logger.log("Cuenta" + count)
+                    Logger.log("Suma = " + suma);
+                }
+            }
+        }
+
+        Logger.log("Promedios " +  promedios);
+
+        //Reemplaza los valores correspondientes por el promedio calculado:
+        for(var f = 0; f < datos.length; f++){
+            for(var c = 1; c < datos[0].length; c++){
+              
+                //Se reemplaza el valor por el promedio
+                if(datos[f][c] == "NO"){
+                    datos[f][c] = promedios[c];
+                }
+
+            }
+        }
+
+
+    }
+
+    return datos;
+
+}
+
+//Funcion de uso para el grafico de linea, en caso de tener una unica linea, coloca otra para el eje espacial, espaciada
+//de manera igual todos los puntos.
+function retornar_varias_columnas(datos_in){
+
+  //Si solo se coje una columna rellenar con valores igualmente espaciados (espaciamiento de 1)
+    if(datos_in[0].length == 1){
+
+        for(var i = 0; i < datos_in.length; i++){
+
+            datos_in[i] = [i+1 ,datos_in[i][0]]
+        }
+        return datos_in;
+    } 
+    else{
+
+        return datos_in;
+    }
+}
+
+//Dependiendo del tipo de gráfico devuelve los valores necesarios hacía el cliente
+function colocador_datos(tiempo,tipo_vac,tipo_grafico){
+
+    let datos_retorno = [];
+
+    if(tipo_grafico == "G1"){
+        datos_retorno = escalador_frecuencias(tiempo,tipo_vac);
+    }
+    else if(tipo_grafico == "G2"){
+        datos_retorno = escalador_frecuencias_barras(tiempo,tipo_vac);
+    }
+    else if(tipo_grafico == "G3"){
+        //Colocar Pastel
+    }
+    else{
+        //Colocar Dispersion
+    }
+    
+    Logger.log(datos_retorno);
+    return JSON.stringify(datos_retorno);
+
+}
+
+
+
 
 function retornar_nombre(){
 
