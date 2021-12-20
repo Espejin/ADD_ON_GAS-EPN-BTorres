@@ -2,161 +2,996 @@
 
 <html>
   <script type="text/javascript" src="https://raw.githubusercontent.com/GTCMT/DataToMusicAPI/master/dtm.js"></script>
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
   <head>
+
+      <style>
+        .main {
+            display: flex;
+        }
+    </style>
+
   </head>
   <body>
-    <p>Prueba de interfaz</p>
-    <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
-    <p> <button type="button" onclick="google.script.run.graficador()">Recolector</button> </p>
-    <p> <button type="button" onclick="sonido_continuo()">Prueba auditiva</button> </p>
-    <p> <button type="button" onclick="google.script.run.escalador_frecuencias()">Prueba funciones programación</button> </p>
-    <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
-
-    <input type="button" value="Not Clicked"
-      onclick="probando_gs()" />
+    <h1 style="text-align:center;"><b>Parámetros del Gráfico:</b><h1>
+    <br>
     
+    <div>
+    <span class="gray">Tiempo: </span> <input type="text" id="tiempo">
+    </div>
+    <br>  
+    <!--
+    <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
+    -->
+
+    <div style="width:800px; margin:0 auto;">
+      <span class="gray" style="text-align:center;">Selector de Gráfico: </span>
+      <span class="gray" style="text-align:center;">Selector de Timbre: </span>  
+    <div style="width:800px; margin:0 auto;">
+
+      <select id="Tipo_Grafico" >
+      <option value="G1" selected>Gráfico de Linea</option>
+      <option value="G2">Gráfico de Barras</option>
+      <option value="G3">Gráfico de Pastel</option>
+      <option value="G4">Gráfico de Dispersión</option>
+      </select>
+
+      <select id="Timbre">
+      <option value="T1" selected>Timbre 1 (Única Señal)</option>
+      <option value="T2">Timbre 2 (2 Señales)</option>
+      <option value="T3">Timbre 3 (3 Señales)</option>
+      <option value="T4">Timbre 4 (4 Señales)</option>
+      </select>
+    </div>
+
+    <br>
+    <span class="gray">Faltantes y Especiales: </span> <br>
+    <div>
+    <select id="Vacios">
+    <option value="O1" selected> Suavizar </option>
+    <option value="O2">Rellenar con promedio de la columna</option>
+    </select>
+    <div>
+    <br/>
+    
+    <div class="block">
+      <input type="button" class="share" value="Sonificación!"
+      onclick="probando_gs()" />
+      <button class="action" disabled="">Detener</button>
+    </div>
+    <br>
+
+    <!--
+    <input type="radio" id="uno" value="uno" name="timbre">Timbre con una señal<br>   
+    <input type="radio" id="dos" value="dos" name="timbre">Timbre mezclando dos señales<br>   
+    <input type="radio" id="tres" value="tres" name="timbre">Timbre mezclando tres señales<br>  
+    <input type="radio" id="cuatro" value="cuatro" name="timbre">Timbre mezclando cuatro señales<br><br> 
+    -->
+      
+    <hr>
+    
+
+    <!--
+    <p>Tratamiento de vacíos o caracteres especiales</p>
+    <label> Opcion: </label> <input type="text" id="vacios">  -->
+    
+    <!--<p> <button type="button" id="detener">Detener Sonido</button> </p> -->
+    <h1><b>Solo gráficar: </b></h1>
+    <p> <button type="button" class="action" onclick="google.script.run.graficador(document.getElementById('Tipo_Grafico').value)">Solo Gráfico</button> </p>
+    <hr>
+
+    <!--
+    <label> texto: </label> <input type="text" id="tts">  
+    <p> <button type="button" onclick="text_speach()">Probando texto a voz: </button> </p>
+    <p> <button type="button" onclick="google.script.run.escalador_frecuencias_barras(3,'O1')">Probador de funciones: </button> </p>
+    -->
+    <!--
+    <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
+    -->
+    <!--<p> <button type="button" onclick="tocar_frecuencia()">Prueba funciones programación</button> </p>
+    -->
     <script>
 
-        function pasarlo(data){
-            console.log("mis datos  " + JSON.parse(data))
-        }
+        //Variables del generador de voz, text-to-speach:
+        var synthesis = window.speechSynthesis;
+        var voices = synthesis.getVoices();
+        var utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'es-ES';
+        utterance.voice = voices[1];
+        //
 
-        function pasoporServer(dato){
-
-          var datoJSON = dato;//JSON.parse(dato);
-          
-          //return datoJSON;
-
-        }
-        
-        function prueba_dtm(){
-            var context = new (window.AudioContext || window.webkitAudioContext)();
-
-            // create Oscillator node
-            var oscillator = context.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(100, context.currentTime); // value in hertz
-            oscillator.connect(context.destination);
-            oscillator.start(context.currentTime);
-            oscillator.stop(context.currentTime + 2);
-        }
-
-        function tocar_frecuencia(frec,inicio,fin){
-            // Contexto de audio, primera version para navegadores basados en Chromium o Firefox, segunda 
-            // para antiguos o algunas versiones de Safari.         
-            var context = new (window.AudioContext || window.webkitAudioContext)();
-            //Se define sonido de nota sobre el tiempo en que se apagará el mismo.
-            //Se crea una frecuencia constante con un oscilador.
-            var nota = context.createOscillator();
-            //Se define el volumen, mediante a la ganancia, por defecto 1 (100%)
-            var volumen = context.createGain();
-            //El oscilador se creará con una onda cuadrada.
-            nota.type = 'sine';
-            //Se conecta el oscilador con la ganancia.
-            nota.connect(volumen);
-            //Se coloca una frecuencia para sonar de manera constante.
-            nota.frequency.value = frec;
-            //Se conecta el sonido a los parlantes o dispositivo de salida de audio.
-            volumen.connect(context.destination);
-            //Se toca la nota,
-            nota.start(0 + inicio);
-            //Se modifica la ganancia en el paso del tiempo
-            //volumen.gain.exponentialRampToValueAtTime(0.3, context.currentTime + inicio + 0.25);
-            nota.stop(0 + fin);
-        }
 
         function probando_gs(){
-          
+        
+        var tiempo = parseFloat(document.getElementById("tiempo").value);
+        var vacio = document.getElementById("Vacios").value;
+        var tipo_g = document.getElementById("Tipo_Grafico").value;
+
         var dato = google.script.run.withSuccessHandler(
 
           function (fuente) 
-           {            
+           { 
              var datazo =  JSON.parse(fuente);  // undefined
-             console.log(datazo[0]); // Escalamiento de Frecuencias
-             generar_audio_GLinea(datazo[0][0],datazo[1][0])
-             console.log(datazo[1]);  // Escalamiento de tiempo
-             console.log(datazo[2]);  //Vertices (Puntos) en Frecuencia
+             const frecuencias_f = datazo[0];
+             const tiempo_f = datazo[1];
+             const espacio_f = datazo[2];
+             const cabecera_f = datazo[3];
+
+             console.log(frecuencias_f); // Escalamiento de Frecuencias
+             ejecutador_graficos(frecuencias_f,tiempo_f,espacio_f,frecuencias_f.length,cabecera_f,tipo_g);
+             console.log(tiempo_f);  // Escalamiento de tiempo
+             console.log(espacio_f);  //Eje espacial
+             console.log(cabecera_f);
            }
-        ).escalador_frecuencias();
+        ).colocador_datos(tiempo,vacio,tipo_g);
           
           //var datos_a = google.script.run.withSuccessHandler(pasoporServer).probador();
           //console.log(dato);
         }
 
-        function sonido_continuo(){
-            tocar_frecuencia(293.7,0,2);
-            //tocar_frecuencia(100,1,2);
+        function ejecutador_graficos(vec_frecuencia,vec_tiempo,vec_canal,ejecuciones,cabeceras,tipo){
+
+          //console.log(vec_frecuencia[0]);
+          //console.log(vec_tiempo[0]);
+          //console.log(ejecuciones);
+          
+          let count = 1;
+          let tiempo_espera = 0;
+          let tiempo_tts = 0;
+          let texto = "";
+          let duracion_speach = 0;
+
+          var detener = document.getElementById("detener");
+
+          if (tipo == "G1"){
+          for(var i = 0; i < ejecuciones; i++){
+
+              
+              texto = "Gráfico número " + count
+              duracion_speach = (tiempo_speach(texto) + 1)*1000;
+              setTimeout(text_speach,tiempo_tts,texto);
+              console.log("Dura speach " + duracion_speach);
+              tiempo_espera = tiempo_tts + duracion_speach + 300;
+              if(i == 0){
+                  tiempo_espera = duracion_speach;
+              }
+              setTimeout(generar_audio_GLinea, tiempo_espera,vec_frecuencia[i], vec_tiempo[i],vec_canal);
+              tiempo_tts =  tiempo_tts  + vec_tiempo[i].reduce((a, b) => a + b, 0)*1000 + duracion_speach;//2500; 
+              count++;
+            
+          }
+          } else if (tipo == "G2"){
+
+              let texto2 = "Barra número "
+              tiempo_espera = 0;
+              tiempo_tts = 0;
+              let tiempo_tts_inter = 0;
+              let duracion_speach2 = 0; 
+
+              for(var f = 0; f < ejecuciones; f++){
+                  texto = "Serie de barras de nombre:  " + cabeceras[f];
+                  setTimeout(text_speach,tiempo_tts,texto);
+                  duracion_speach = (tiempo_speach(texto) + 1)*1000;
+                  tiempo_tts_inter = duracion_speach + tiempo_tts;
+                  if(f == 0){
+                      tiempo_tts_inter = duracion_speach;
+                  }
+                  for(c = 0; c < vec_frecuencia[f].length; c++){
+                      setTimeout(text_speach, tiempo_tts_inter,texto2 + (c+1));
+                      duracion_speach2 =(tiempo_speach(texto2) + 1)*1000;
+                      setTimeout(generar_audio_GBarra, tiempo_tts_inter + duracion_speach2 + 200,[vec_frecuencia[f][c]], vec_tiempo[f][c],vec_canal[f][c]);
+                      tiempo_espera = tiempo_tts_inter + duracion_speach2 + vec_tiempo[f][c].reduce((a, b) => a + b, 0)*1000 + 500;
+                      tiempo_tts_inter = tiempo_espera;  
+                  }
+                  tiempo_tts =  tiempo_tts_inter;//2500;
+                  count++;
+
+              }
+
+          }
+          else if(tipo == "G3"){
+          
+          for(var i = 0; i < ejecuciones; i++){
+
+              count = 1;
+              texto = "Rebanada de nombre " + cabeceras[i];
+              duracion_speach = (tiempo_speach(texto) + 1)*1000;
+              setTimeout(text_speach,tiempo_tts,texto);
+              if(i == 0){
+                  tiempo_espera = duracion_speach;  
+              }
+              console.log("Dura speach " + duracion_speach);
+              setTimeout(generar_audio_GBarra, tiempo_espera,[vec_frecuencia[i]], [vec_tiempo[i]],vec_canal);
+              tiempo_tts =  tiempo_tts  + vec_tiempo[i]*1000 + duracion_speach;//2500;
+              tiempo_espera = tiempo_tts + 2000;
+          }
+              
+          }
+          else if (tipo == "G4"){
+          
+          let tiempo_ad_seg = 0;
+
+          for(var i = 0; i < ejecuciones; i++){
+              
+              texto = "Dispersión número " + count
+              duracion_speach = (tiempo_speach(texto) + 1)*1000;
+              setTimeout(text_speach,tiempo_tts,texto);
+              console.log("Dura speach " + duracion_speach);
+              tiempo_espera = tiempo_tts + duracion_speach + 300; 
+              if(i == 0){
+                  tiempo_espera = duracion_speach;
+              }
+              setTimeout(generar_audio_GDispersion, tiempo_espera,vec_frecuencia[i], vec_tiempo[i],vec_canal);
+              tiempo_ad_seg = ((vec_tiempo[i].reduce((a, b) => a + b, 0)*0.2)/(vec_tiempo.length + 1))*1000;
+              tiempo_tts =  tiempo_tts  + vec_tiempo[i].reduce((a, b) => a + b, 0)*1000 + duracion_speach + tiempo_ad_seg;//2500;
+              count++;
+            
+          }
+          } 
+
         }
 
-        function generar_audio_GLinea(vector_frecuencia,vector_tiempo){
-            
-          var t_inicial = 0;
-          var t_final = 0;
+        function generar_audio_GLinea(vector_frecuencia,vector_tiempo,vector_canales){
 
-          // create web audio api context
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          //console.log("Tiempo total : " + tiempo_overlap)
+
+          var contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
+
+            
+          let t_inicial = 0;
+          let t_final = 0;
+          let ganancias = [ 0.1 , 0.45 , 0.9 , 1 , 0.9 , 0.45 , 0.1 ]; //Valor de Ganancia para 7 canales
+          let canales = [ 1 , 1 , 1 , 2 , 3 , 3 , 3 ]; //Correspondencias de Canal
 
           // create Oscillator node
-          const oscillator = audioCtx.createOscillator();
+          const oscillator1 = contexto_audio.createOscillator();
+          const oscillator2 = contexto_audio.createOscillator();
+          const oscillator3 = contexto_audio.createOscillator();
+          const oscillator4 = contexto_audio.createOscillator();
 
-          oscillator.type = 'square';
+          oscillator1.type = 'sine';
+          oscillator2.type = 'sine';
+          oscillator3.type = 'sine';
+          oscillator4.type = 'sine';
 
+          console.log("llegan frecuencias " + vector_frecuencia);
+          let vec_frec1 = vector_frecuencia.map(x => x * 1);
+          //console.log("primera frec: " + vec_frec1);
+          let vec_frec2 = vector_frecuencia.map(x => x * 2);
+          //console.log("segunda frec: " + vec_frec2);
+          let vec_frec3 = vector_frecuencia.map(x => x * 3);
+          //console.log("tercera frec: " + vec_frec3);
+          let vec_frec4 = vector_frecuencia.map(x => x * 4);
+          //console.log("cuarta frec: " + vec_frec4);
 
-          for(var i = 0; i < vector_frecuencia.length; i++){
-                t_final = t_final + vector_tiempo[i]; 
-                oscillator.frequency.setValueAtTime(vector_frecuencia[i], t_inicial); // value in hertz
-                t_inicial = t_final;
+          //Evitar que comprobaciones en oscilador completo se desborden:
+          for( var i = 0; i < vec_frec1.length; i++){
+              if(vec_frec1[i] < 293){
+                  vec_frec1[i] = 2;
+              }
+              if(vec_frec2[i] < 293){
+                  vec_frec2[i] = 2;
+              }
+              if(vec_frec3[i] < 293){
+                  vec_frec3[i] = 2;
+              }
+              if(vec_frec4[i] < 293){
+                  vec_frec4[i] = 2;
+              }
           }
-      
-          oscillator.connect(audioCtx.destination);
-          oscillator.start();
-          oscillator.stop(t_final + vector_tiempo[vector_tiempo.length - 1])
+
+          let vec_gan1 = ganancias.map( x => x * 1);
+          let vec_gan2 = ganancias.map( x => x * 1);
+          let vec_gan3 = ganancias.map( x => x * 1);
+          let vec_gan4 = ganancias.map( x => x * 1);
+          let tiemp_final = 0;
+
+  
+          if(document.getElementById("Timbre").value == "T2"){
+
+              console.log("Entro a 2 timbres");
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"linea");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+          }
+
+          else if(document.getElementById("Timbre").value == "T3"){
+
+              console.log("Entro a 3 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"linea");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+          }
+          else if(document.getElementById("Timbre").value == "T4")
+          {
+              console.log("Entro a 4 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"linea");
+              definir_oscilador_completo(contexto_audio,oscillator4,vec_frec4,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan4,"linea");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+              oscillator4.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+              oscillator4.stop(tiemp_final);
+
+          } else{
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"linea");
+          
+              oscillator1.start(0);
+              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
+              oscillator1.stop(tiemp_final);
+        
+          }
+
+
+        }
+
+
+        function generar_audio_GBarra(vector_frecuencia,vector_tiempo,vector_canales){
+
+          var contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
+
             
-            /*
+          let t_inicial = 0;
+          let t_final = 0;
+          let ganancias = [ 0.1 , 0.45 , 0.9 , 1 , 0.9 , 0.45 , 0.1 ]; //Valor de Ganancia para 7 canales
+          let canales = [ 1 , 1 , 1 , 2 , 3 , 3 , 3 ]; //Correspondencias de Canal
 
-            console.log(vector_frecuencia);
-            console.log(vector_tiempo);
+          // create Oscillator node
+          const oscillator1 = contexto_audio.createOscillator();
+          const oscillator2 = contexto_audio.createOscillator();
+          const oscillator3 = contexto_audio.createOscillator();
+          const oscillator4 = contexto_audio.createOscillator();
 
-            for(var i = 0; i < vector_frecuencia.length; i++){
-                t_final = t_final + vector_tiempo[i]; 
-                tocar_frecuencia(vector_frecuencia[i], t_inicial, t_final);
-                t_inicial = t_final;
-            }
-            */
+          oscillator1.type = 'sine';
+          oscillator2.type = 'sine';
+          oscillator3.type = 'sine';
+          oscillator4.type = 'sine';
+
+          //console.log("llegan frecuencias " + vector_frecuencia);
+          let vec_frec1 = vector_frecuencia.map(x => x * 1);
+          //console.log("primera frec: " + vec_frec1);
+          let vec_frec2 = vector_frecuencia.map(x => x * 2);
+          //console.log("segunda frec: " + vec_frec2);
+          let vec_frec3 = vector_frecuencia.map(x => x * 3);
+          //console.log("tercera frec: " + vec_frec3);
+          let vec_frec4 = vector_frecuencia.map(x => x * 4);
+          //console.log("cuarta frec: " + vec_frec4);
+
+          //Evitar que comprobaciones en oscilador completo se desborden:
+          for( var i = 0; i < vec_frec1.length; i++){
+              if(vec_frec1[i] < 293){
+                  vec_frec1[i] = 2;
+              }
+              if(vec_frec2[i] < 293){
+                  vec_frec2[i] = 2;
+              }
+              if(vec_frec3[i] < 293){
+                  vec_frec3[i] = 2;
+              }
+              if(vec_frec4[i] < 293){
+                  vec_frec4[i] = 2;
+              }
+          }
+
+          let vec_gan1 = ganancias.map( x => x * 1);
+          let vec_gan2 = ganancias.map( x => x * 1);
+          let vec_gan3 = ganancias.map( x => x * 1);
+          let vec_gan4 = ganancias.map( x => x * 1);
+          let tiemp_final = 0;
+
+  
+          if(document.getElementById("Timbre").value == "T2"){
+
+              console.log("Entro a 2 timbres");
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"barra");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+          }
+
+          else if(document.getElementById("Timbre").value == "T3"){
+
+              console.log("Entro a 3 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"barra");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+          }
+          else if(document.getElementById("Timbre").value == "T4")
+          {
+              console.log("Entro a 4 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"barra");
+              definir_oscilador_completo(contexto_audio,oscillator4,vec_frec4,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan4,"barra");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+              oscillator4.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+              oscillator4.stop(tiemp_final);
+
+          } else{
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"barra");
+          
+              oscillator1.start(0);
+              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
+              oscillator1.stop(tiemp_final);
+        
+          }
 
         }
 
-        function my_dtm(){
-            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            var channels = 2;
-            // Create an empty two second stereo buffer at the
-            // sample rate of the AudioContext
-            var frameCount = audioCtx.sampleRate * 2.0;
 
-            var myArrayBuffer = audioCtx.createBuffer(channels, frameCount, audioCtx.sampleRate);
-            let num_2 = 0.05;
 
-            for (var channel = 0; channel < channels; channel++) {
-            // This gives us the actual ArrayBuffer that contains the data
-            var nowBuffering = myArrayBuffer.getChannelData(channel);
-               for (var i = 0; i < frameCount; i++) {
-                  // Math.random() is in [0; 1.0]
-                  // audio needs to be in [-1.0; 1.0]
-                  nowBuffering[i] = 1;
+        function generar_audio_GPastel(vector_frecuencia,vector_tiempo,vector_canales){
+
+          var contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
+
+            
+          let t_inicial = 0;
+          let t_final = 0;
+          let ganancias = [ 0.1 , 0.45 , 0.9 , 1 , 0.9 , 0.45 , 0.1 ]; //Valor de Ganancia para 7 canales
+          let canales = [ 1 , 1 , 1 , 2 , 3 , 3 , 3 ]; //Correspondencias de Canal
+
+          // create Oscillator node
+          const oscillator1 = contexto_audio.createOscillator();
+          const oscillator2 = contexto_audio.createOscillator();
+          const oscillator3 = contexto_audio.createOscillator();
+          const oscillator4 = contexto_audio.createOscillator();
+
+          oscillator1.type = 'sine';
+          oscillator2.type = 'sine';
+          oscillator3.type = 'sine';
+          oscillator4.type = 'sine';
+
+          //console.log("llegan frecuencias " + vector_frecuencia);
+          let vec_frec1 = vector_frecuencia.map(x => x * 1);
+          //console.log("primera frec: " + vec_frec1);
+          let vec_frec2 = vector_frecuencia.map(x => x * 2);
+          //console.log("segunda frec: " + vec_frec2);
+          let vec_frec3 = vector_frecuencia.map(x => x * 3);
+          //console.log("tercera frec: " + vec_frec3);
+          let vec_frec4 = vector_frecuencia.map(x => x * 4);
+          //console.log("cuarta frec: " + vec_frec4);
+
+          let vec_gan1 = ganancias.map( x => x * 1);
+          let vec_gan2 = ganancias.map( x => x * 1);
+          let vec_gan3 = ganancias.map( x => x * 1);
+          let vec_gan4 = ganancias.map( x => x * 1);
+          let tiemp_final = 0;
+
+          if(document.getElementById("Timbre").value == "T2"){
+
+              console.log("Entro a 2 timbres");
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+          }
+
+          else if(document.getElementById("Timbre").value == "T3"){
+
+              console.log("Entro a 3 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"pastel");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+          }
+          else if(document.getElementById("Timbre").value == "T4")
+          {
+              console.log("Entro a 4 timbres");
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3,"pastel");
+              definir_oscilador_completo(contexto_audio,oscillator4,vec_frec4,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan4,"pastel");
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+              oscillator4.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+              oscillator4.stop(tiemp_final);
+
+          } else{
+
+              tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
+          
+              oscillator1.start(0);
+              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
+              oscillator1.stop(tiemp_final);
+        
+          }
+
+        }
+
+
+
+
+        function generar_audio_GDispersion(vector_frecuencia,vector_tiempo,vector_canales){
+
+          var contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
+
+            
+          let t_inicial = 0;
+          let t_final = 0;
+          let ganancias = [ 0.4 , 0.6 , 0.8 , 1 , 0.8 , 0.6 , 0.4 ]; //Valor de Ganancia para 7 canales
+          let canales = [ 1 , 1 , 1 , 2 , 3 , 3 , 3 ]; //Correspondencias de Canal
+
+          // create Oscillator node
+          const oscillator1 = contexto_audio.createOscillator();
+          const oscillator2 = contexto_audio.createOscillator();
+          const oscillator3 = contexto_audio.createOscillator();
+          const oscillator4 = contexto_audio.createOscillator();
+
+          oscillator1.type = 'sine';
+          oscillator2.type = 'sine';
+          oscillator3.type = 'sine';
+          oscillator4.type = 'sine';
+
+          //console.log("llegan frecuencias " + vector_frecuencia);
+          let vec_frec1 = vector_frecuencia.map(x => x * 1);
+          //console.log("primera frec: " + vec_frec1);
+          let vec_frec2 = vector_frecuencia.map(x => x * 2);
+          //console.log("segunda frec: " + vec_frec2);
+          let vec_frec3 = vector_frecuencia.map(x => x * 3);
+          //console.log("tercera frec: " + vec_frec3);
+          let vec_frec4 = vector_frecuencia.map(x => x * 4);
+          //console.log("cuarta frec: " + vec_frec4);
+
+          let vec_gan1 = ganancias.map( x => x * 1);
+          let vec_gan2 = ganancias.map( x => x * 1);
+          let vec_gan3 = ganancias.map( x => x * 1);
+          let vec_gan4 = ganancias.map( x => x * 1);
+          let tiemp_final = 0;
+
+          if(document.getElementById("Timbre").value == "T2"){
+
+              console.log("Entro a 2 timbres");
+              tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+
+          }
+
+          else if(document.getElementById("Timbre").value == "T3"){
+
+              console.log("Entro a 3 timbres");
+
+              tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+
+          }
+          else if(document.getElementById("Timbre").value == "T4")
+          {
+              console.log("Entro a 4 timbres");
+
+              tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator3,vec_frec3,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan3);
+              definir_oscilador_completo_dispersion(contexto_audio,oscillator4,vec_frec4,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan4);
+
+              oscillator1.start(0);
+              oscillator2.start(0);
+              oscillator3.start(0);
+              oscillator4.start(0);
+
+              oscillator1.stop(tiemp_final);
+              oscillator2.stop(tiemp_final);
+              oscillator3.stop(tiemp_final);
+              oscillator4.stop(tiemp_final);
+   
+          } else{
+
+              tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
+
+              oscillator1.start(0);
+
+              oscillator1.stop(tiemp_final);
+        
+          }
+
+        }
+
+
+
+        function asignar_ganancia(tipo,canal,tiempo,val_gan,gana_izq,gana_cen,gana_der,t_overlap){
+
+          if(tipo == 1){
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  /*
+                  gana_cen.gain.setValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.setValueAtTime(0,tiempo + t_overlap);
+                  */
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+
+                case (canal == 2):
+                  gana_cen.gain.setValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+               }
+          } 
+          else if(tipo == 2){
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal == 2):
+                  gana_cen.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.linearRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
                 }
-            }
+          }
 
-            // Get an AudioBufferSourceNode.
-           // This is the AudioNode to use when we want to play an AudioBuffer
-           var source = audioCtx.createBufferSource();
-          // set the buffer in the AudioBufferSourceNode
-          source.buffer = myArrayBuffer;
-          // connect the AudioBufferSourceNode to the
-          // destination so we can hear the sound
-          source.connect(audioCtx.destination);
-          // start the source playing
-          source.start();
+          else if(tipo == 3){
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  break;
+
+                case (canal == 2):
+                  gana_cen.gain.setValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.setValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+               }
+
+          }
+
+          else if(tipo == 4){
+
+              switch(true){
+                case (canal == 1):
+                  gana_izq.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  break;
+
+                case (canal == 2):
+                  gana_cen.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  gana_der.gain.setValueAtTime(0,tiempo);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+                case (canal==3):
+                  gana_der.gain.exponentialRampToValueAtTime(val_gan,tiempo);
+                  gana_cen.gain.setValueAtTime(0,tiempo);
+                  gana_izq.gain.setValueAtTime(0,tiempo);
+                  //console.log("Entro con ganan " + val_gan);
+                  break;
+               }
+
+          }
+
+
+
         }
+
+
+        function definir_oscilador_completo(audio_ctx,oscillator,vector_frecuencia,t_final,t_inicial,vector_tiempo,vector_canales,canales,ganancias,graf_frecuencia){
+          //console.log("Entra con frecuencias : " + vector_frecuencia)
+
+          var ganancia_izq = audio_ctx.createGain();  
+          var ganancia_der = audio_ctx.createGain(); 
+          var ganancia_cent = audio_ctx.createGain();
+          var cont = 0;
+          var cont_aux = 0;
+          let frec_aux = [];
+          let can_aux = [];
+          let tiempo_aux = vector_tiempo; 
+
+          console.log("Frecuencias iniciales + " + vector_frecuencia );
+
+          var merger = audio_ctx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+          
+          if(graf_frecuencia == "linea"){
+              for(var o = 0; o < vector_frecuencia.length; o++){
+                  if(vector_frecuencia[o] != 2){
+                  frec_aux[cont] = vector_frecuencia[o];
+                  can_aux[cont] = vector_canales[o];
+                  cont++;
+                  }
+              }
+          }else{ //barra_pastel
+              frec_aux = vector_frecuencia;
+              can_aux = vector_canales
+              t_final =  vector_tiempo.reduce((a, b) => a + b, 0);
+          }
+
+          console.log("Frecuencias finales + " + frec_aux );
+          console.log("Canales finales + " + can_aux);
+
+          cont = 0;
+
+          for(var i = 0; i < frec_aux.length; i++){
+
+                if(i == 0){
+                    oscillator.frequency.setValueAtTime(frec_aux[i], t_inicial);
+                }
+                else{
+                    t_final = t_final + vector_tiempo[cont]; 
+                    oscillator.frequency.linearRampToValueAtTime(frec_aux[i], t_final); // value in hertz
+                    cont++;
+                } 
+
+                //t_inicial = t_final;
+          }
+
+          console.log("Frecuencias finales + " + frec_aux );
+
+          //Generar for para ganancias
+          let count = 0;
+          let tiempo = 0;
+          let aux_baj_sub = 0;
+          //var dur_div = []
+          let segmento = 0;
+          let bajando = 0;
+          let subiendo = 0;
+
+          console.log("Canales ya definidos " + can_aux);
+          console.log("Tiempo_entrada " + tiempo_aux);
+
+
+          for(var j = 0; j < can_aux.length; j++){
+              
+     
+              if( tiempo == 0){
+                  
+                  asignar_ganancia(1,canales[can_aux[j]-1],0,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.02);
+                  //tiempo = tiempo + tiempo_canales[j];
+                  console.log("inicio: " + "  j -> " + j +" canal -> " + canales[can_aux[j]-1] + " gain ->" + ganancias[can_aux[j]-1] + " tiempo ->" + tiempo);
+                 
+              } 
+              
+              if(j == can_aux.length - 1 ){
+
+                //console.log("Final Conseguido!");
+
+              } else if( can_aux[j] == can_aux[j+1] ){
+                  asignar_ganancia(1,canales[can_aux[j]-1],tiempo,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,(vector_tiempo[j])*0.1);
+                  tiempo = tiempo + tiempo_aux[j];
+
+                  console.log("igual: " + "  j -> " + j +" canal -> " + canales[can_aux[j]-1] + " gain ->" + ganancias[can_aux[j]-1]  + " tiempo ->" + tiempo);
+
+              } else if( can_aux[j] > can_aux[j+1]){
+
+                  //asignar_ganancia(1,canales[vector_canales[j]-1],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.1);
+
+                  aux_baj_sub = can_aux[j] - can_aux[j+1];
+                  segmento = tiempo_aux[j]/(aux_baj_sub);
+                  bajando  = 2;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[can_aux[j]-bajando],tiempo,ganancias[can_aux[j]-bajando],ganancia_izq,ganancia_cent,ganancia_der,segmento*0.1);
+                      console.log("DEscifra bajada:  canal -> " + canales[can_aux[j] -bajando] + " ganancias -> " + ganancias[can_aux[j]-bajando] + " k ->" + k);
+                      //console.log("Descifrando bajada:  -> " + vector_canales[j]+bajando);
+                      bajando++;
+                  }
+
+                  bajando = 2;
+
+                  //console.log("bajada: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-bajando] + " gain ->" + ganancias[vector_canales[j]-bajando]  + " tiempo -> " + tiempo );
+
+              } else if ( can_aux[j] < can_aux[j+1] ){
+
+                 // asignar_ganancia(1,canales[vector_canales[j]-bajando],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.05);
+                  aux_baj_sub = can_aux[j+1] - can_aux[j]
+                  segmento = tiempo_aux[j]/(aux_baj_sub);
+                  subiendo = 0;
+
+                  for(var k = 0; k < aux_baj_sub; k++){
+                      tiempo = tiempo + segmento;
+                      asignar_ganancia(2,canales[can_aux[j] + subiendo],tiempo,ganancias[can_aux[j] + subiendo],ganancia_izq,ganancia_cent,ganancia_der,segmento*0.1);
+                      
+                      console.log("DEscifra subida:  canal -> " + canales[can_aux[j] + subiendo] + " ganancias -> " + ganancias[can_aux[j]+ subiendo] + " k ->" + k);
+                      subiendo++;
+
+                  }
+                  subiendo = 0;
+
+                  //console.log("subida: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]] + " gain ->" + ganancias[vector_canales[j]]  + " tiempo -> " + tiempo);
+
+              }
+
+
+            
+          }
+          
+          //oscillator.connect(audioCtx.destination);
+          merger.connect(audio_ctx.destination);
+          
+          return t_final;
+
+
+        }
+
+
+        function definir_oscilador_completo_dispersion(audio_ctx,oscillator,vector_frecuencia,t_final,t_inicial,vector_tiempo,vector_canales,canales,ganancias){
+
+          var ganancia_izq = audio_ctx.createGain();  
+          var ganancia_der = audio_ctx.createGain(); 
+          var ganancia_cent = audio_ctx.createGain();
+          var cont = 0;
+          var cont_aux = 0;
+          let frec_aux = [];
+          let can_aux = [];
+          let tiempo_aux = vector_tiempo; 
+
+          console.log("Frecuencias iniciales + " + vector_frecuencia );
+
+          var merger = audio_ctx.createChannelMerger(6);
+          //merger.channelCount = 3;
+          merger.channelInterpretation = "discrete";
+          //merger.channelCountMode = "explicit";
+
+          //Connect splitter' outputs to each Gain Nodes
+          oscillator.connect(ganancia_izq);
+          oscillator.connect(ganancia_der);
+          oscillator.connect(ganancia_cent);
+          
+          // 2 cent, 3 subwoofer, 4 izq_surr, 5 der_surr
+          ganancia_izq.connect(merger, 0, 0);
+          ganancia_der.connect(merger, 0, 1);
+          ganancia_cent.connect(merger, 0, 2);
+          
+          for(var o = 0; o < vector_frecuencia.length; o++){
+              if(vector_frecuencia[o] != 2){
+                  frec_aux[cont] = vector_frecuencia[o];
+                  can_aux[cont] = vector_canales[o];
+                  cont++;
+              }
+          }
+          
+          let tiempo_par = tiempo_aux.reduce((a, b) => a + b, 0);
+          let segmento = (tiempo_par*0.2)/(frec_aux.length);
+          let espaciado = tiempo_par/can_aux.length;
+          let tiempo_muerto = 0;
+
+          for(var i = 0; i < frec_aux.length; i++ ){
+          
+              oscillator.frequency.setValueAtTime(frec_aux[i], tiempo_muerto);
+
+              asignar_ganancia(3,canales[can_aux[i]-1],tiempo_muerto,ganancias[can_aux[i]-1],ganancia_izq,ganancia_cent,ganancia_der,0);
+              asignar_ganancia(4,canales[can_aux[i]-1],tiempo_muerto+segmento,0.00000000001,ganancia_izq,ganancia_cent,ganancia_der,0);
+
+              if( i != frec_aux.length - 1){
+                  tiempo_muerto = tiempo_muerto + espaciado;
+              }
+          }
+
+          merger.connect(audio_ctx.destination);
+          
+          if(frec_aux.length == 1){
+              return segmento;
+          }
+          else{
+              return tiempo_par + segmento;
+          }
+
+        }
+
+
         
         /*
         function probando_audioBuffer(){
@@ -169,6 +1004,41 @@
 
         }
         */
+
+
+        function ejecutar_despues(tiempo_muerto){
+            return new Promise(resolve => setTimeout(resolve, tiempo_muerto));
+        }
+
+        function detener_audio(){
+
+            /*
+            if (contexto_audio.state === 'running') {
+                contexto_audio.suspend();
+            }
+            */
+            return;
+        }
+
+        function text_speach(mensaje){
+            //var mensaje = document.getElementById("tts").value
+            // This overrides the text "Hello World" and is uttered instead
+            //utterance.text = "My name is Glad.";
+            //Speak Rate 1 por defecto, correspondiente a 180 a 220 palabras por minuto
+            utterance.text = mensaje;
+            synthesis.speak(utterance);
+
+        }
+
+        function tiempo_speach(mensaje){
+            //Speak Rate 1 por defecto, correspondiente a 150 a 220 palabras por minuto [wpm] 
+            let wps = 100 / 60;
+            return mensaje.split(" ").length/wps;
+
+        }
+
+
+
     </script>
   </body>
 </html>
