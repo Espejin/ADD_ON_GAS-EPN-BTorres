@@ -1,0 +1,282 @@
+<!-- cloente_interfaz.css.html -->
+<!-- En ese script se encuentran las modificaciones gráficas del add-on:  -->
+
+<style>
+
+    .branding-below {
+        bottom: 0px;
+        top: 0px;
+    }
+
+    body {
+        //background-image: url('https://raw.githubusercontent.com/Espejin/ADD-ON-GAS-PUBLIC/main/Degradado_fondo_opaco.jpg');
+        background-size: 100% 100%;
+        //background-color: rgba(0,0,0,.5);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+      }
+
+    span {
+        display: block;
+        position: flex;
+        //padding-bottom: 0px;
+        margin-bottom: 5px;
+    }
+
+    .logo_addon {
+       padding-top: 5px;
+       height: 95px;
+       width: 92px;
+    }
+
+    .pie_pagina {
+        position: absolute;
+        top: 96%;
+        align-content: center;
+        left:20%;
+        font-size: 12px;
+        color: light-gray;
+    }
+
+    .btn_tutorial {
+        position: relative;
+        margin-top: 8px;
+        left: 48%;
+        border-radius: 50%;
+        background-color: white;
+        border-style: solid;
+        border-color: #FFD700;
+        color: #FFD700;
+        transition-duration: 0.4s;
+        width: 22px;
+        height: 17px;
+    }
+
+    .btn_tutorial:hover {
+        background-color:#FFF8D2;
+        color: white;
+        border-color: white;
+    }
+
+    .href_text{
+        display: absolute;
+        color: #FFD700;
+        //padding-top: 7px;
+        padding-bottom:0px;
+        padding-left: 7px;
+        transition-duration: 0.4s;
+    }
+
+    .href_text:hover{
+        display: absolute;
+        color: black;
+        padding-bottom:0px;
+        padding-left: 7px;
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Input text con animación:
+    // Basado en: https://www.youtube.com/watch?v=3AK3vspZvvM
+
+    .custom-field {
+        position: relative;
+        //bottom: 15px;
+        font-size: 14px;
+    }
+
+    .custom-field input {
+        border: none;
+        -webkit-appearance: none;
+        -ms-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background: #f2f2f2;
+        padding: var(--field-padding);
+        border-radius: 3px;
+        width: 156px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .custom-field .placeholder {
+        position: absolute;
+        left: 5px;
+        top: calc(50% + 2px);
+        width: 70px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        line-height: 100%;
+        transform: translateY(-50%);
+        color: #aaa;
+        transition: 
+            top 0.3s ease,
+            color 0.3s ease,
+            font-size 0.3s ease;
+    }
+
+    .custom-field input.dirty + .placeholder,
+    .custom-field input:focus + .placeholder,
+    .custom-field input:not(:placeholder-shown) + .placeholder {
+        top: -14px;
+        font-size: 14px;
+        color: #222;
+    }
+
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Separador de Secciones:
+
+    .separador_secciones{
+        //top: 20px;
+        width: 100%;
+        height: 60px;
+        border-radius: 10px;
+        border-style: outset;
+        border-color: light-gray;
+        align-content: space-around;
+        overflow: hidden;
+        white-space: nowrap;
+        margin-top: 13px;
+    }
+
+    .especial_correo {
+       margin-top: 12px;
+       margin-bottom: 5px;
+       height: 65px;
+    }
+
+    .separador_secciones_selects{
+        margin-top: 12px;
+        margin-bottom: 0px;
+        width: 100%;
+        height: 185px;
+        border-radius: 10px;
+        border-style: outset;
+        border-color: light-gray;
+        align-content: space-around;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .separador_interior{
+        display: block; float: left; position: relative; right: 50%;
+    }
+
+    .separador_elemento_izq{
+        display: inline-block;
+        padding-top: 23px;
+        padding-right: 5px;
+        padding-bottom: 10px;
+        padding-left: 15px;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+
+    .separador_elemento_der{
+        display: inline-block;
+        padding-top: 23px;
+        padding-right: 15px;
+        padding-bottom: 10px;
+        padding-left: 5px;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .separador_elemento_unico{
+        display: block;
+        padding-top: 8px;
+        padding-right: 10px;
+        padding-bottom: 3px;
+        padding-left: 10px;
+        overflow: hidden;
+        white-space: nowrap;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .separador_elemento_unico_final{
+        display: block;
+        padding-top: 8px;
+        padding-right: 10px;
+        padding-bottom: 10px;
+        padding-left: 10px;
+        overflow: hidden;
+        white-space: nowrap;
+        display:flex;
+        flex-direction:column;
+    }
+
+    .titulo_separador {
+      position: absolute;
+      left: 20px;
+      top: 121px;
+      font-size: 11px;
+      background-color: white;
+    }
+
+    .titulo_separador_selects {
+      position: absolute;
+      left: 20px;
+      top: 198px;
+      font-size: 11px;
+      background-color: white;
+    }
+
+    .header_correo{
+        top: 400px;
+    }
+
+    #detener, #reproducir {
+      display: inline;
+      justify-content: center;
+      padding-left: 5px;
+      margin-left: 10px;
+      width: 100px;
+    }
+
+    .separador_botones {
+        padding-top: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+    }
+
+    .separador_logo {
+        position:relative ;
+        margin-top: 0px;
+        padding-top: 0px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0px;
+    }
+
+    #imagen_logo{
+        display: inline-block;
+        margin-top: 0px;
+        padding-top: 0px;
+    }
+
+    #texto_logo {
+        display: inline-block;
+        font-size: 20px;
+        font-family: "Monaco", "Lucida Console", monospace;
+        margin-left: 5px;
+    }
+    
+
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Select personalizado:
+    // Basado en: https://codepen.io/yy/pen/vOYqYV
+
+
+
+
+
+</style>
