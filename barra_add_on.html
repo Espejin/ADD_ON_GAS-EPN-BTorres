@@ -1,174 +1,429 @@
 <!DOCTYPE html>
 
 <html>
-  <script type="text/javascript" src="https://raw.githubusercontent.com/GTCMT/DataToMusicAPI/master/dtm.js"></script>
+
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
   <head>
+
+      <?!= extraer_archivo('cliente_logico.js'); ?>
+      <?!= extraer_archivo('cliente_interfaz.css'); ?>
+
   </head>
   <body>
-    <p>Prueba de interfaz</p>
-    <p> <button type="button" onclick="google.script.run.bienvenida()">Comenzar</button> </p>
-    <p> <button type="button" onclick="google.script.run.graficador()">Recolector</button> </p>
-    <p> <button type="button" onclick="sonido_continuo()">Prueba auditiva</button> </p>
-    <p> <button type="button" onclick="google.script.run.escalador_frecuencias()">Prueba funciones programación</button> </p>
-    <p> <button type="button" onclick="google.script.run.entregador(10)">Prueba integración</button> </p>
-
-    <input type="button" value="Not Clicked"
-      onclick="probando_gs()" />
+  
+  <div class="sidebar branding-below">
+    <div class="separador_logo">
+        <div id="imagen_logo">
+        <img src="https://raw.githubusercontent.com/Espejin/ADD-ON-GAS-PUBLIC/main/add_on_logo_2.PNG" class="logo_addon">
+        </div>
+        <div id="texto_logo">
+          <span> ADD-ON </span> 
+          <span> Interpretación </span>
+          <span> Gráfica </span>
+        </div>
+    </div>
     
-    <script>
+    <div>
+        <span class="titulo_separador" style="color:gray">Parámetros rellenables:</span> 
+        <div class="separador_secciones">
 
-        function pasarlo(data){
-            console.log("mis datos  " + JSON.parse(data))
-        }
+            <div class="separador_elemento_izq" style="left: 20px;">
+                <label class="custom-field">
+                <input type="text" placeholder="&nbsp;" id="tiempo"/>
+                <span class="placeholder">Tiempo:</span>  
+                </label>
+            </div>
 
-        function pasoporServer(dato){
+            <div class="separador_elemento_der">
+                <label class="custom-field">
+                <input type="text" placeholder="&nbsp;" id="rango"/>
+                <span class="placeholder">Rango:</span>  
+                </label>
+            </div>
 
-          var datoJSON = dato;//JSON.parse(dato);
-          
-          //return datoJSON;
+        </div>
+    
 
-        }
+
+    <span class="titulo_separador_selects" style="color:gray">Parámetros seleccionables:</span>
+
+    <div class="separador_secciones_selects">
+  
+    <div class="separador_elemento_unico">
+        <label for="Tipo_Grafico"><font size = 2 >Selector de Gráfico:</font></label>
+        <select id="Tipo_Grafico" style="width: 100%;">
+          <option value="G1" selected>Gráfico de Linea</option>
+          <option value="G2">Gráfico de Barras</option>
+          <option value="G3">Gráfico de Pastel</option>
+          <option value="G4">Gráfico de Dispersión</option>
+        </select>
+    </div>
+
+    <div class="separador_elemento_unico">
+        <label for="Timbre"><font size = 2 >Selector de Timbre:</font></label>
+        <select id="Timbre" style="width: 100%;">
+          <option value="T1" selected>Timbre 1 (Única Señal)</option>
+          <option value="T2">Timbre 2 (2 Señales)</option>
+          <option value="T3">Timbre 3 (3 Señales)</option>
+          <option value="T4">Timbre 4 (4 Señales)</option>
+        </select>
+    </div>
+
+    <div class="separador_elemento_unico_final">
+        <label for="Vacios"><font size = 2 >Faltantes y Especiales:</font></label>
+        <select id="Vacios" style="width: 100%;">
+          <option value="O1" selected> Suavizar </option>
+          <option value="O2">Rellenar con promedio de la columna</option>
+        </select>
+    </div>
+    </div>
+
+    <span class="titulo_separador_selects header_correo" style="color:gray">Compartir documento (Opcional):</span>
+    <div class="separador_secciones especial_correo">
+        <div class="alinea_correo separador_elemento_izq" style="left: 20px;">
+            <label class="custom-field">
+            <input type="email" placeholder="&nbsp;" id="correo" style="width:240px;margin-bottom:2px;"/>
+            <span class="placeholder">Correo:</span>  
+            </label>
+        </div>
+
+        <div class="separador_elemento_der">
+            <input type="button" id="btn_correo" value="Compartir" onclick="compartir_correo()" />
+        </div>
+    </div>
+
+    <div class="separador_botones">
+      <input type="button" class="share" id="reproducir" value="Sonificación!"
+      onclick="probando_gs()" />
+      <button class="action" id="detener" disabled="">Detener</button>
+    </div>
+    
+    <div class="btn_tutorial">
+    <a class="href_text" id="tutorial" href="https://espejin.github.io/ADD-ON-GAS-PUBLIC/" target="_blank">?</a>
+    </div>
+
+
+    <span class="pie_pagina" style="color:#D0D0D0">
+      Desarrollado por Bryan Torres - 2021
+    </span>
+
+
+  </div>
+
+  <script>
+      document.body.style.zoom="79%";
+
+        //------------------------------------------------------------------------------------------------------
+        //Variables del generador de voz, text-to-speach:
+        var synthesis = window.speechSynthesis;
+        var voices = synthesis.getVoices();
+        var utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'es-ES';
+        utterance.voice = voices[1];
+        //------------------------------------------------------------------------------------------------------
+        //Accesos rapidos por teclado:
+
+        var flujo = 0;
+        var flujo_aux = 0;
+        var aux_graf_evento = 0;
+        var aux_relleno_evento = 0;
+        var comprobando_celdas = 0;
         
-        function prueba_dtm(){
-            var context = new (window.AudioContext || window.webkitAudioContext)();
+        window.addEventListener('keydown', function (event) {
+        var mensaje = "";
+        var tiempo = 0;
+     
+        if(event.shiftKey && event.code === 'KeyF'){
+            console.log("Presionado SHIFT + F");
+            //Grafico de Linea
 
-            // create Oscillator node
-            var oscillator = context.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(100, context.currentTime); // value in hertz
-            oscillator.connect(context.destination);
-            oscillator.start(context.currentTime);
-            oscillator.stop(context.currentTime + 2);
-        }
-
-        function tocar_frecuencia(frec,inicio,fin){
-            // Contexto de audio, primera version para navegadores basados en Chromium o Firefox, segunda 
-            // para antiguos o algunas versiones de Safari.         
-            var context = new (window.AudioContext || window.webkitAudioContext)();
-            //Se define sonido de nota sobre el tiempo en que se apagará el mismo.
-            //Se crea una frecuencia constante con un oscilador.
-            var nota = context.createOscillator();
-            //Se define el volumen, mediante a la ganancia, por defecto 1 (100%)
-            var volumen = context.createGain();
-            //El oscilador se creará con una onda cuadrada.
-            nota.type = 'sine';
-            //Se conecta el oscilador con la ganancia.
-            nota.connect(volumen);
-            //Se coloca una frecuencia para sonar de manera constante.
-            nota.frequency.value = frec;
-            //Se conecta el sonido a los parlantes o dispositivo de salida de audio.
-            volumen.connect(context.destination);
-            //Se toca la nota,
-            nota.start(0 + inicio);
-            //Se modifica la ganancia en el paso del tiempo
-            //volumen.gain.exponentialRampToValueAtTime(0.3, context.currentTime + inicio + 0.25);
-            nota.stop(0 + fin);
-        }
-
-        function probando_gs(){
-          
-        var dato = google.script.run.withSuccessHandler(
-
-          function (fuente) 
-           {            
-             var datazo =  JSON.parse(fuente);  // undefined
-             console.log(datazo[0]); // Escalamiento de Frecuencias
-             generar_audio_GLinea(datazo[0][0],datazo[1][0])
-             console.log(datazo[1]);  // Escalamiento de tiempo
-             console.log(datazo[2]);  //Vertices (Puntos) en Frecuencia
-           }
-        ).escalador_frecuencias();
-          
-          //var datos_a = google.script.run.withSuccessHandler(pasoporServer).probador();
-          //console.log(dato);
-        }
-
-        function sonido_continuo(){
-            tocar_frecuencia(293.7,0,2);
-            //tocar_frecuencia(100,1,2);
-        }
-
-        function generar_audio_GLinea(vector_frecuencia,vector_tiempo){
-            
-          var t_inicial = 0;
-          var t_final = 0;
-
-          // create web audio api context
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-          // create Oscillator node
-          const oscillator = audioCtx.createOscillator();
-
-          oscillator.type = 'square';
-
-
-          for(var i = 0; i < vector_frecuencia.length; i++){
-                t_final = t_final + vector_tiempo[i]; 
-                oscillator.frequency.setValueAtTime(vector_frecuencia[i], t_inicial); // value in hertz
-                t_inicial = t_final;
-          }
-      
-          oscillator.connect(audioCtx.destination);
-          oscillator.start();
-          oscillator.stop(t_final + vector_tiempo[vector_tiempo.length - 1])
-            
-            /*
-
-            console.log(vector_frecuencia);
-            console.log(vector_tiempo);
-
-            for(var i = 0; i < vector_frecuencia.length; i++){
-                t_final = t_final + vector_tiempo[i]; 
-                tocar_frecuencia(vector_frecuencia[i], t_inicial, t_final);
-                t_inicial = t_final;
+            if(aux_graf_evento === 4){
+                aux_graf_evento = 0;
             }
-            */
 
-        }
+            if(flujo_aux == 3){
 
-        function my_dtm(){
-            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            var channels = 2;
-            // Create an empty two second stereo buffer at the
-            // sample rate of the AudioContext
-            var frameCount = audioCtx.sampleRate * 2.0;
-
-            var myArrayBuffer = audioCtx.createBuffer(channels, frameCount, audioCtx.sampleRate);
-            let num_2 = 0.05;
-
-            for (var channel = 0; channel < channels; channel++) {
-            // This gives us the actual ArrayBuffer that contains the data
-            var nowBuffering = myArrayBuffer.getChannelData(channel);
-               for (var i = 0; i < frameCount; i++) {
-                  // Math.random() is in [0; 1.0]
-                  // audio needs to be in [-1.0; 1.0]
-                  nowBuffering[i] = 1;
+                if(aux_graf_evento === 0){
+                    document.getElementById("Tipo_Grafico").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el gráfico de línea.";
+                    text_speach(mensaje);
+                    aux_graf_evento = 1;
                 }
+                else if(aux_graf_evento === 1){
+                    document.getElementById("Tipo_Grafico").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el gráfico de barras.";
+                    text_speach(mensaje);
+                    aux_graf_evento = 2;  
+                }
+                else if(aux_graf_evento === 2){
+                    document.getElementById("Tipo_Grafico").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el gráfico de pastel.";
+                    text_speach(mensaje);
+                    aux_graf_evento = 3;  
+                }
+                else if(aux_graf_evento === 3){
+                    document.getElementById("Tipo_Grafico").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el gráfico de dispersión.";
+                    text_speach(mensaje);
+                    aux_graf_evento = 4;  
+                }
+                flujo = 4;
+            }
+            else if(flujo_aux == 4){
+
+                if(aux_graf_evento === 0){
+                    document.getElementById("Timbre").selectedIndex = aux_graf_evento;
+                    mensaje = "Usted ha seleccionado el Timbre 1, timbre con una señal."
+                    text_speach(mensaje); 
+                    aux_graf_evento = 1;
+                }
+                else if(aux_graf_evento === 1){
+                    document.getElementById("Timbre").selectedIndex = aux_graf_evento;
+                    mensaje = "Usted ha seleccionado el Timbre 2, timbre con una señal y un armónico."
+                    text_speach(mensaje); 
+                    aux_graf_evento = 2;  
+                }
+                else if(aux_graf_evento === 2){
+                    document.getElementById("Timbre").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el Timbre 3, timbre con una señal y dos armónicos."
+                    text_speach(mensaje);
+                    aux_graf_evento = 3;  
+                }
+                else if(aux_graf_evento === 3){
+                    document.getElementById("Timbre").selectedIndex = aux_graf_evento; 
+                    mensaje = "Usted ha seleccionado el Timbre 4, timbre con una señal y tres armónicos."
+                    text_speach(mensaje);
+                    aux_graf_evento = 4;  
+                }
+                flujo = 5;
             }
 
-            // Get an AudioBufferSourceNode.
-           // This is the AudioNode to use when we want to play an AudioBuffer
-           var source = audioCtx.createBufferSource();
-          // set the buffer in the AudioBufferSourceNode
-          source.buffer = myArrayBuffer;
-          // connect the AudioBufferSourceNode to the
-          // destination so we can hear the sound
-          source.connect(audioCtx.destination);
-          // start the source playing
-          source.start();
+            else if(flujo_aux == 5){
+
+                if(aux_graf_evento === 0){
+                    document.getElementById("Vacios").selectedIndex = aux_graf_evento;
+                    mensaje = "Usted ha seleccionado ignorar los valores vacíos o caracteres especiales."
+                    text_speach(mensaje); 
+                    aux_graf_evento = 1;
+                }
+                else if(aux_graf_evento === 1){
+                    document.getElementById("Vacios").selectedIndex = aux_graf_evento;
+                    mensaje = "Usted ha seleccionado reemplazar los valores vacíos o caracteres especiales por el promedio de su agrupación."
+                    text_speach(mensaje); 
+                    aux_graf_evento = 4;  
+                }
+                flujo = 6;
+            }    
+
         }
+
+        if(event.shiftKey && event.code === 'KeyG'){
+
+            tiempo = 0; 
+            tiempo = 200;
+            setTimeout(text_speach,tiempo,"Presiona las teclas ALT más P, para ingresar el rango del gráfico.");
+            flujo = 2;
+
+        }
+
+        if(event.keyCode === 13){
+            console.log("Mi flujo " + flujo);
+            
+            if(flujo == 3 && (typeof parseFloat(document.getElementById("tiempo").value) != 'number' || parseFloat(document.getElementById("tiempo").value) < 0)){
+              text_speach("Tiempo incorrecto, porfavor ingresa un número.")
+            }
+
+            else{
+
+
+              if(flujo == 2.5){
+                
+                  let prueba = google.script.run.withSuccessHandler(
+
+                  function (fuente) 
+           { 
+                  let prueba =  JSON.parse(fuente);  // undefined
+                  if(prueba === "ERROR_SELECT"){
+                      setTimeout(text_speach,200,"No se ha escrito rango o seleccionado mediante cursor o teclado. Intente nuevamente por favor o presione ALT + P para escribir un rango.");
+                      comprobando_celdas = 0;
+                  }
+                  else if(prueba === "ERROR_INSERT"){
+                      setTimeout(text_speach,200,"El rango de celdas ingresado no es correcto, presione ALT + P para ingresar nuevamente o seleccione mediante teclado o cursor por favor.");
+                      comprobando_celdas = 0;
+                  }
+                  else if(prueba === "CORRECTO"){
+                      comprobando_celdas = 1;
+                      //console.log("Valor adentro : " + comprobando);
+                      setTimeout(text_speach,200,"Presiona ALT + P  para ingresar el tiempo de sonificación.");
+                  } 
+
+                  if(comprobando_celdas !=0){
+                    document.activeElement.blur();
+                    aux_relleno_evento = 1;
+                    flujo = 2.5;
+                  }
+                  else{
+                    document.getElementById("rango").focus();
+                    aux_relleno_evento = 0;
+                    flujo = 2.5;
+                  }
+
+            }
+            ).verificar_rango(document.getElementById("rango").value);
+
+          
+            }
+
+              if(flujo == 3){
+
+                document.activeElement.blur();
+                text_speach("Presiona las teclas shift más F para seleccionar el tipo de gráfico, tras finalizar decisión presiona ENTER");
+                aux_relleno_evento = 0;
+                aux_graf_evento = 0;
+                flujo_aux = 3;
+            }
+
+
+            if(flujo == 4){
+                text_speach("Presiona las teclas shift más F para seleccionar el tipo de timbre, tras finalizar decisión presiona ENTER ");
+                flujo_aux = 4;
+                aux_graf_evento = 0;
+            }
+
+            if(flujo == 5){
+                text_speach("Presiona las teclas shift más F para seleccionar el método de manejo de valores faltantes.");
+                aux_graf_evento = 0;
+                flujo_aux = 5;
+            }
+
+            if(flujo == 6){
+                aux_graf_evento = 0;
+                text_speach("Presiona las teclas shift más J para sonificar el gráfico seleccionado.");
+                flujo_aux = 6;
+            }
+
+            }
+            
+        }
+
+        if(event.altKey && event.code === 'KeyP'){
+            tiempo = 0;
+            console.log("Presionado ALT + P");
+            //Grafico de Linea
+
+            if(aux_relleno_evento === 0 && flujo === 2){
+                document.getElementById("rango").focus();
+                mensaje = "Ingrese el rango de celdas para la extracción de datos en notación A1 o seleccionelo en la hoja de cálculo mediante cursor o teclado."
+                flujo = 2.5;
+                text_speach(mensaje);
+            }
+            else if(aux_relleno_evento == 1 && flujo === 2.5){
+                document.getElementById("tiempo").focus();
+                mensaje = "Ingrese el tiempo deseado en segundos y posteriormente la tecla ENTER"
+                text_speach(mensaje);
+                tiempo = tiempo_speach(mensaje)*1000 + 200;
+                flujo = 3;
+            }
+        }
+
+
+        if(event.shiftKey && event.code === 'KeyJ'){
+          
+            if(flujo != 6){
+                text_speach("No se puede sonificar sin ingresar correctamente los parámetros");
+            }
+            else{
+                probando_gs();
+                flujo = 2;
+            }
+
+            //setTimeout(text_speach,tiempo,"Presiona las teclas ALT más P, para ingresar el tiempo del gráfico")
+        }
+
+
+        });
+
+
+        //------------------------------------------------------------------------------------------------------
+
+        // Detectar presencia del usuario sobre el ADD-ON:
+          var detecta_presencia = 2;
+          var count_detecta_presencia = 0;
+
+          window.addEventListener('mouseout', function(evt) {
+
+          if (evt.toElement == null && evt.relatedTarget == null && detecta_presencia == 1) {
+              detecta_presencia = 0;
+              let palabra_magica = "Fuera"
+              setTimeout(text_speach,200,palabra_magica);
+          }
+          
+
+          if (evt.toElement != null && evt.relatedTarget != null && detecta_presencia == 0) {
+              detecta_presencia = 1;
+              let palabra_magica = "Dentro"
+              setTimeout(text_speach,200,palabra_magica);
+
+          }
+
+          });
+
+        //------------------------------------------------------------------------------------------------------
+        //A ejecutar en cuanto cargue el ADD-ON:
+
+        window.addEventListener("load", function(){
+            if(flujo == 0){
+                var t_presentacion = 0;
+                var bienvenida = google.script.run.withSuccessHandler(
+
+                function (fuente) 
+                { 
+                    let presentacion = "Buen día " + JSON.parse(fuente) +  " te damos la bienvenida al ADD-ON de interpretación gráfica";
+                    setTimeout(text_speach,200,presentacion);
+                    t_presentacion = (2000*2) + 200;
+
+                    setTimeout(text_speach,t_presentacion,"Mueve el cursor hacia la derecha, una vez escuches la palabra dentro, presiona SHIFT más G para comenzar.");
+              
+                }).devolver_Nombre();
+              
+                flujo = 2;
+                detecta_presencia = 0;
+            
+            }
+        });
         
-        /*
-        function probando_audioBuffer(){
-            var context = new (window.AudioContext || window.webkitAudioContext)();
+        //------------------------------------------------------------------------------------------------------
 
-            //Sonido de 1/2 (0,5) segundos
-            var myArrayBuffer = context.createBuffer(2,22050, 44100);
-            var nowBuffering = myArrayBuffer.getChannelData(1);
-            nowBuffering[1] = [100,200,300];
+        function text_speach(mensaje){
+            //var mensaje = document.getElementById("tts").value
+            // This overrides the text "Hello World" and is uttered instead
+            //utterance.text = "My name is Glad.";
+            //Speak Rate 1 por defecto, correspondiente a 180 a 220 palabras por minuto
+            utterance.text = mensaje;
+            synthesis.speak(utterance);
+        }
+
+        function text_speach_presente(mensaje){
+            
+            let synthesis_p = window.speechSynthesis;
+            let voices_p = synthesis.getVoices();
+            let utterance_p = new SpeechSynthesisUtterance();
+            utterance_p.lang = 'es-ES';
+            utterance_p.voice = voices[1];
+
+            utterance_p.text = mensaje;
+            synthesis_p.speak(utterance);
 
         }
-        */
-    </script>
+
+        function tiempo_speach(mensaje){
+            //Speak Rate 1 por defecto, correspondiente a 150 a 220 palabras por minuto [wpm] 
+            let wps = 100 / 60;
+            return mensaje.split(" ").length/wps;
+
+        }
+
+  </script>
+
   </body>
 </html>
