@@ -254,7 +254,6 @@
         //------------------------------------------------------------------------------------------------------
         //Se asigna funcionalidad a la tecla ENTER
         if(event.keyCode === 13){
-            console.log("Mi flujo " + flujo);
             
             if(flujo == 3 && (typeof parseFloat(document.getElementById("tiempo").value) != 'number' || parseFloat(document.getElementById("tiempo").value) < 0)){
               document.getElementById("tiempo").value = "";
@@ -283,7 +282,6 @@
                   }
                   else if(prueba === "CORRECTO"){
                       comprobando_celdas = 1;
-                      //console.log("Valor adentro : " + comprobando);
                       setTimeout(text_speach,200,"Presiona ALT + P  para ingresar el tiempo de sonificación.");
                   } 
 
@@ -377,7 +375,6 @@
 
         if(event.altKey && event.code === 'KeyP'){
             tiempo = 0;
-            console.log("Presionado ALT + P");
             //Grafico de Linea
 
             if(aux_relleno_evento === 0 && flujo === 2){
@@ -477,21 +474,13 @@
           if (evt.toElement === null && evt.relatedTarget === null && detecta_presencia === 1 && presencia_inicial === 1) {
               detecta_presencia = 0;
               reproducir_efecto_sonido("error");
-              //let t_comienzo_utterance = 0;
-              //let palabra_magica = "Fuera"
-              //text_speach(palabra_magica);
-              //setTimeout(cambiar_presencia_regular,t_comienzo_utterance + 500,0);
-              //setTimeout(stop_utterance,t_comienzo_utterance+1000)
+
           }
           
           //Si se sale del add-on suna la retroalimentacion positiva
           if (evt.toElement != null && evt.relatedTarget != null && detecta_presencia === 0 && presencia_inicial === 1) {
               detecta_presencia = 1;
-              //let t_comienzo_utterance = 0;
               reproducir_efecto_sonido("correcto");
-              //let palabra_magica = "Dentro"
-              //text_speach(palabra_magica);
-              //setTimeout(cambiar_presencia_regular,t_comienzo_utterance + 1000,1);
 
           }
 
@@ -617,23 +606,15 @@
             if(tipo === "error"){
                 efecto_sonido = audio_error
                 efecto_sonido.volume = 0.4;
-                //efecto_sonido.loop = false;
                 efecto_sonido.play();
             }
             else{
                 efecto_sonido = audio_correcto;
                 efecto_sonido.volume = 0.4;
-                //efecto_sonido.loop = false;
                 efecto_sonido.play();
             }
 
         }
-
-        /*function forzar_salida(){
-
-            throw new Error("Salida forzada de ejecución");
-
-        }*/
 
   </script>
 
