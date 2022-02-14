@@ -27,17 +27,13 @@
 
              console.log(frecuencias_f); // Escalamiento de Frecuencias
 
-
              ejecutador_graficos(frecuencias_f,tiempo_f,espacio_f,frecuencias_f.length,cabecera_f,tipo_g);
-             //ejecutador_graficos(frecuencias_f,tiempo_f,espacio_f,frecuencias_f.length,cabecera_f,tipo_g);
              console.log(tiempo_f);  // Escalamiento de tiempo
              console.log(espacio_f);  //Eje espacial
              console.log(cabecera_f);
            }
         ).colocador_datos(tiempo,vacio,tipo_g);
         
-          //var datos_a = google.script.run.withSuccessHandler(pasoporServer).probador();
-          //console.log(dato);
         }
 
         //---------------------------------------------------------------------------------------------
@@ -62,10 +58,6 @@
 
           finaliza_sonificacion = 0;
           sonificacion_curso = 0;
-
-          //console.log(vec_frecuencia[0]);
-          //console.log(vec_tiempo[0]);
-          //console.log(ejecuciones);
           
           let count = 1;
           let tiempo_espera = 0;
@@ -198,49 +190,16 @@
 
 
 // ------------------------------------------------------------------------------------------
-      
-      //Los osciladores son variables de un solo uso, deben reiniciarse cada vez y detenerse en base 
-      // a una variable global asociada.
-
-      /*
-      var oscillator1;
-      var oscillator2;
-      var oscillator3;
-      var oscillator4;
-
-      function detener_sonificacion(){
-          if(document.getElementById("Timbre").value === "T1"){
-              oscillator1.stop();
-          }
-          else if(document.getElementById("Timbre").value === "T2"){
-              oscillator1.stop();
-              oscillator2.stop();
-          } else if(document.getElementById("Timbre").value === "T3"){
-              oscillator1.stop();
-              oscillator2.stop();
-              oscillator3.stop();
-          }
-          else if(document.getElementById("Timbre").value === "T4"){
-              oscillator1.stop();
-              oscillator2.stop();
-              oscillator3.stop();
-              oscillator4.stop();
-          }
-
-      }
-
-      */
 
       //Los osciladores son variables de un solo uso, deben reiniciarse cada vez y detenerse en base 
       // a una variable global asociada.
       var contexto_audio;
-
       var oscillator1;
       var oscillator2;
       var oscillator3;
       var oscillator4;
 
-      //Funcion que canela la sonificacion
+      //Funcion que cancela la sonificacion
       function detener_sonficacion(){
           contexto_audio.suspend();
       }
@@ -258,8 +217,6 @@
                 
                 return;
           }
-
-          //console.log("Tiempo total : " + tiempo_overlap)
 
           contexto_audio = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -370,7 +327,6 @@
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"linea");
 
               oscillator1.start(0);
-              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
               oscillator1.stop(tiemp_final);
         
           }
@@ -478,7 +434,6 @@
           }
           else if(document.getElementById("Timbre").value == "T4")
           {
-              console.log("Entro a 4 timbres");
 
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"barra");
               definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"barra");
@@ -558,7 +513,6 @@
 
           if(document.getElementById("Timbre").value == "T2"){
 
-              console.log("Entro a 2 timbres");
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
               definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
 
@@ -570,8 +524,6 @@
           }
 
           else if(document.getElementById("Timbre").value == "T3"){
-
-              console.log("Entro a 3 timbres");
 
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
               definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
@@ -587,7 +539,6 @@
           }
           else if(document.getElementById("Timbre").value == "T4")
           {
-              console.log("Entro a 4 timbres");
 
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
               definir_oscilador_completo(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2,"pastel");
@@ -609,7 +560,6 @@
               tiemp_final = definir_oscilador_completo(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1,"pastel");
           
               oscillator1.start(0);
-              //console.log("acabo " + tiemp_final + vector_tiempo[vector_tiempo.length - 1] );
               oscillator1.stop(tiemp_final);
         
           }
@@ -670,7 +620,6 @@
 
           if(document.getElementById("Timbre").value == "T2"){
 
-              console.log("Entro a 2 timbres");
               tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
               definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
 
@@ -683,8 +632,6 @@
           }
 
           else if(document.getElementById("Timbre").value == "T3"){
-
-              console.log("Entro a 3 timbres");
 
               tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
               definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
@@ -701,7 +648,6 @@
           }
           else if(document.getElementById("Timbre").value == "T4")
           {
-              console.log("Entro a 4 timbres");
 
               tiemp_final = definir_oscilador_completo_dispersion(contexto_audio,oscillator1,vec_frec1,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan1);
               definir_oscilador_completo_dispersion(contexto_audio,oscillator2,vec_frec2,t_final,t_inicial,vector_tiempo,vector_canales,canales,vec_gan2);
@@ -744,24 +690,17 @@
                   gana_izq.gain.setValueAtTime(val_gan,tiempo);
                   gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  /*
-                  gana_cen.gain.setValueAtTime(0,tiempo + t_overlap);
-                  gana_der.gain.setValueAtTime(0,tiempo + t_overlap);
-                  */
-                  //console.log("Entro con ganan " + val_gan);
                   break;
 
                 case (canal == 2):
                   gana_cen.gain.setValueAtTime(val_gan,tiempo);
                   gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 case (canal==3):
                   gana_der.gain.setValueAtTime(val_gan,tiempo);
                   gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                }
           } 
@@ -772,19 +711,16 @@
                   gana_izq.gain.linearRampToValueAtTime(val_gan,tiempo);
                   gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 case (canal == 2):
                   gana_cen.gain.linearRampToValueAtTime(val_gan,tiempo);
                   gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_der.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 case (canal==3):
                   gana_der.gain.linearRampToValueAtTime(val_gan,tiempo);
                   gana_cen.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
                   gana_izq.gain.linearRampToValueAtTime(0,tiempo + t_overlap);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 }
           }
@@ -802,13 +738,11 @@
                   gana_cen.gain.setValueAtTime(val_gan,tiempo);
                   gana_izq.gain.setValueAtTime(0,tiempo);
                   gana_der.gain.setValueAtTime(0,tiempo);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 case (canal==3):
                   gana_der.gain.setValueAtTime(val_gan,tiempo);
                   gana_cen.gain.setValueAtTime(0,tiempo);
                   gana_izq.gain.setValueAtTime(0,tiempo);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                }
 
@@ -827,13 +761,11 @@
                   gana_cen.gain.exponentialRampToValueAtTime(val_gan,tiempo);
                   gana_izq.gain.setValueAtTime(0,tiempo);
                   gana_der.gain.setValueAtTime(0,tiempo);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                 case (canal==3):
                   gana_der.gain.exponentialRampToValueAtTime(val_gan,tiempo);
                   gana_cen.gain.setValueAtTime(0,tiempo);
                   gana_izq.gain.setValueAtTime(0,tiempo);
-                  //console.log("Entro con ganan " + val_gan);
                   break;
                }
 
@@ -848,7 +780,6 @@
         //Funcion que ordena los canales de audio y coloca todas las frecuencias y ganancias segun sea necesario
 
         function definir_oscilador_completo(audio_ctx,oscillator,vector_frecuencia,t_final,t_inicial,vector_tiempo,vector_canales,canales,ganancias,graf_frecuencia){
-          //console.log("Entra con frecuencias : " + vector_frecuencia)
           var ganancia_izq = audio_ctx.createGain();  
           var ganancia_der = audio_ctx.createGain(); 
           var ganancia_cent = audio_ctx.createGain();
@@ -859,13 +790,9 @@
           let frec_aux = [];
           let can_aux = [];
           let tiempo_aux = vector_tiempo; 
-
-          console.log("Frecuencias iniciales + " + vector_frecuencia );
  
           var merger = audio_ctx.createChannelMerger(6);
-          //merger.channelCount = 3;
           merger.channelInterpretation = "discrete";
-          //merger.channelCountMode = "explicit";
           
 
           //Connect splitter' outputs to each Gain Nodes
@@ -893,9 +820,6 @@
               t_final =  vector_tiempo.reduce((a, b) => a + b, 0);
           }
 
-          console.log("Frecuencias finales + " + frec_aux );
-          console.log("Canales finales + " + can_aux);
-
           cont = 0;
 
           for(var i = 0; i < frec_aux.length; i++){
@@ -909,7 +833,6 @@
                     cont++;
                 } 
 
-                //t_inicial = t_final;
           }
 
           console.log("Frecuencias finales + " + frec_aux );
@@ -918,7 +841,6 @@
           let count = 0;
           let tiempo = t_inicial;
           let aux_baj_sub = 0;
-          //var dur_div = []
           let segmento = 0;
           let bajando = 0;
           let subiendo = 0;
@@ -933,24 +855,16 @@
               if( tiempo == t_inicial){
                   
                   asignar_ganancia(1,canales[can_aux[j]-1],t_inicial,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.02);
-                  //tiempo = tiempo + tiempo_canales[j];
-                  console.log("inicio: " + "  j -> " + j +" canal -> " + canales[can_aux[j]-1] + " gain ->" + ganancias[can_aux[j]-1] + " tiempo ->" + tiempo);
                  
               } 
               
               if(j == can_aux.length - 1 ){
 
-                //console.log("Final Conseguido!");
-
               } else if( can_aux[j] == can_aux[j+1] ){
                   asignar_ganancia(1,canales[can_aux[j]-1],tiempo,ganancias[can_aux[j]-1],ganancia_izq,ganancia_cent,ganancia_der,(vector_tiempo[j])*0.1);
                   tiempo = tiempo + tiempo_aux[j];
 
-                  console.log("igual: " + "  j -> " + j +" canal -> " + canales[can_aux[j]-1] + " gain ->" + ganancias[can_aux[j]-1]  + " tiempo ->" + tiempo);
-
               } else if( can_aux[j] > can_aux[j+1]){
-
-                  //asignar_ganancia(1,canales[vector_canales[j]-1],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.1);
 
                   aux_baj_sub = can_aux[j] - can_aux[j+1];
                   segmento = tiempo_aux[j]/(aux_baj_sub);
@@ -959,18 +873,13 @@
                   for(var k = 0; k < aux_baj_sub; k++){
                       tiempo = tiempo + segmento;
                       asignar_ganancia(2,canales[can_aux[j]-bajando],tiempo,ganancias[can_aux[j]-bajando],ganancia_izq,ganancia_cent,ganancia_der,segmento*0.1);
-                      console.log("DEscifra bajada:  canal -> " + canales[can_aux[j] -bajando] + " ganancias -> " + ganancias[can_aux[j]-bajando] + " k ->" + k);
-                      //console.log("Descifrando bajada:  -> " + vector_canales[j]+bajando);
                       bajando++;
                   }
 
                   bajando = 2;
 
-                  //console.log("bajada: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]-bajando] + " gain ->" + ganancias[vector_canales[j]-bajando]  + " tiempo -> " + tiempo );
-
               } else if ( can_aux[j] < can_aux[j+1] ){
 
-                 // asignar_ganancia(1,canales[vector_canales[j]-bajando],tiempo,ganancias[vector_canales[j]-1],ganancia_izq,ganancia_cent,ganancia_der,tiempo*0.05);
                   aux_baj_sub = can_aux[j+1] - can_aux[j]
                   segmento = tiempo_aux[j]/(aux_baj_sub);
                   subiendo = 0;
@@ -978,15 +887,10 @@
                   for(var k = 0; k < aux_baj_sub; k++){
                       tiempo = tiempo + segmento;
                       asignar_ganancia(2,canales[can_aux[j] + subiendo],tiempo,ganancias[can_aux[j] + subiendo],ganancia_izq,ganancia_cent,ganancia_der,segmento*0.1);
-                      
-                      console.log("DEscifra subida:  canal -> " + canales[can_aux[j] + subiendo] + " ganancias -> " + ganancias[can_aux[j]+ subiendo] + " k ->" + k);
                       subiendo++;
 
                   }
                   subiendo = 0;
-
-                  //console.log("subida: " + "  j -> " + j +" canal -> " + canales[vector_canales[j]] + " gain ->" + ganancias[vector_canales[j]]  + " tiempo -> " + tiempo);
-
               }
 
 
@@ -1016,12 +920,8 @@
           let can_aux = [];
           let tiempo_aux = vector_tiempo; 
 
-          console.log("Frecuencias iniciales + " + vector_frecuencia );
-
           var merger = audio_ctx.createChannelMerger(6);
-          //merger.channelCount = 3;
           merger.channelInterpretation = "discrete";
-          //merger.channelCountMode = "explicit";
 
           //Connect splitter' outputs to each Gain Nodes
           oscillator.connect(ganancia_izq);
