@@ -40,15 +40,6 @@ function extraer_archivo(filename) {
 // -------------------- FUNCIONES DE CARACTER FUNCIONAL DEL ADD - ON ----------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------------------
 
-// Variables creacion de graficos ---------------------------------------------------------------------------------------
-var grafico_inicial = 0;
-//----------------------------------------------------------------------------------------------------------------------
-
-
-//function bienvenida() {
-//      var ui = SpreadsheetApp.getUi();
-//      ui.alert("Bienvenido al Add-On");
-//    }
 
 //Esta funcion permite seleccionar un rango, verificando si el valor ingresado se coloco en notacion A1
 function verificar_rango(rangazo){
@@ -98,7 +89,6 @@ function graficador(tipo){
       let mi_app = SpreadsheetApp;
       let hoja_actual = mi_app.getActiveSpreadsheet().getActiveSheet();
       var rango = hoja_actual.getActiveRange();
-      //Logger.log("Rango impreso  - "  + rango.getLastColumn());
 
       verificar_chart();
 
@@ -166,9 +156,7 @@ function calcular_posicion_grafico(){
     let mi_app = SpreadsheetApp;
     let hoja_actual = mi_app.getActiveSpreadsheet().getActiveSheet();
     let columna = hoja_actual.getActiveRange().getLastColumn() + 2;
-    //Logger.log("Columna del rango" +  columna);
     let fila = (hoja_actual.getActiveRange().getLastRow() + 1) - (hoja_actual.getActiveRange().getNumRows());
-    //Logger.log("fila del rango" +  fila);
 
     return [fila,columna];
 }
@@ -193,32 +181,21 @@ function escalador_frecuencias(tiempo_osc,tipo_vacio,grafico){
             frecuencias[i+1] = 1200
         }
     }
-
-    //Logger.log("Mis frecuencias: " + frecuencias);
     
     var datos = extraer_valores();
-    //Logger.log("Datos llegan: " + datos);
-    //Verificar si se tiene mas de una columna, caso contrario rellenar la primera columna
     datos = retornar_varias_columnas(datos);
-    //Logger.log("Verifica 2 columnas: " + datos);
     datos = identificar_vacios_especial(datos,tipo_vacio);
-    //Logger.log("Se devuelven al final: " + datos);
+
     var puntos_frec = [];
     var puntos_frec_it = [];
-    //var datos_aux = [];
+
     var max_min_d = max_min_mat(datos);
     var len_frec = frecuencias.length;
-    var count = 0;
-    var count1 = 0;
+
     var distancia = distancia_puntos(datos);
-    //Logger.log("Mi Distancia quedo = " +  distancia);
     var canales = eje_espacial(extraer_columnas(datos,"tiempo"));
 
-    //Logger.log("Probando canal: " + canales);
-    //Logger.log(datos);
-
     //saltarse primera columna porque contiene la escala en el eje x del grafico lineal.
-
     if(max_min_d[1] < 0){
 
         for(var c = 1; c < (datos[0].length) ; c++){
@@ -247,7 +224,6 @@ function escalador_frecuencias(tiempo_osc,tipo_vacio,grafico){
                     datos[f][c] = (Math.round(((datos[f][c])/(max_min_d[0]))*(len_frec-1)));
                     puntos_frec_it[f] = frecuencias[datos[f][c]];
                     datos[f][c] = frecuencias[datos[f][c]];
-                    //count++;
                 }
             }
                 puntos_frec.push(puntos_frec_it);
@@ -255,14 +231,6 @@ function escalador_frecuencias(tiempo_osc,tipo_vacio,grafico){
         }
     }
 
-    //Logger.log("Mis Datos :" + puntos_frec);
-
-    //let datos_aux = escalar_subida_bajada_frecuencias(datos,frecuencias);
-    //var datos_ref = extraer_columnas(datos,"frecuencias");
-    //datos_aux.push(datos_ref);
-    //Logger.log("Referencia" + datos_aux);
-    //Logger.log(distancia);
-    
     var tiempo_f = escalador_tiempo(tiempo_osc,distancia);
     if(grafico == "linea"){
         graficador("G1");
@@ -270,15 +238,7 @@ function escalador_frecuencias(tiempo_osc,tipo_vacio,grafico){
         graficador("G4");
     }
   
-    //Logger.log("Longitud real: "+ datos_aux[0].length);
-    //escalador_tiempo(1,datos);
-    //Logger.log(datos_aux);
-    //var entregar = [datos_aux,tiempo_f]
-    //Logger.log(entregar);
-    //Logger.log(tiempo_f);
-    //Logger.log([datos_aux,tiempo_f[0],datos_ref,canales]);
     return [puntos_frec,tiempo_f,canales,[]];
-    //
 
 }
 
@@ -301,33 +261,10 @@ function escalador_tiempo(tiempo_esc,dist){
         count = 0;
     }
     
-    Logger.log("escalado a 3 = " + tiemp_final);
     return tiemp_final;
 
 }
 
-/*
-function entregador(t_total){
-  
-    //var frec_entr = escalador_frecuencias();
-    //var dist_graf = distancia_puntos(extraer_valores());
-    var mi_data = extraer_valores();
-
-    //Logger.log("frec : " + frec_entr);
-    //var tiem_esc =  escalador_tiempo(t_total,frec_entr,dist_graf)
-    var entregar = [escalador_frecuencias(),escalador_tiempo(t_total,escalador_frecuencias()[0],distancia_puntos(mi_data))];
-
-    //Logger.log("tiempo : " + tiem_esc);
-    Logger.log(entregar);
-    return JSON.stringify(entregar);
-}
-
-function probador(){
-    var datos = escalador_frecuencias();
-    Logger.log(datos);
-    return JSON.stringify(datos);
-
-}*/
 
 // ----------------------------------------------------------------------------------------------------------------------
 // FUNCIONES GRAFICO DE BARRAS
@@ -361,8 +298,6 @@ function escalador_frecuencias_barras(tiempo_esc,tipo_vacio){
         frec_baras.push(frec_baras_aux);
         frec_baras_aux = [];
     }
-
-    Logger.log(sumas);
 
     let max_min_bar = max_min_mat(datos_barras);
 
@@ -412,11 +347,6 @@ function escalador_frecuencias_barras(tiempo_esc,tipo_vacio){
 
     graficador("G2");
 
-    //Logger.log(tiem_bar)
-    //Logger.log(tiempo_entrega);
-    //Logger.log(canal_entrega);
-    //Logger.log(frec_baras);
-    Logger.log(frec_baras,tiempo_entrega,canal_entrega,cabecera);
     return [frec_baras,tiempo_entrega,canal_entrega,cabecera]
 
 }
@@ -520,55 +450,6 @@ function max_min_mat(matriz){
 }
 
 
-//----------------------------------------------------------------------------------------------------------------------
-// Función de completado de frecuencias, permite colocar frecuencias intermedias con el fin de evitar cambios demasiado
-// bruscos en la reproduccion del audio.
-
-/*function escalar_subida_bajada_frecuencias(matriz,frecuencias){
-    
-    var auxiliar = [];
-    var frec_fin = [];
-    var rango_din = [];
-    var count = 0;
-    
-    for(var c = 1; c < (matriz[0].length) ; c++){
-        for(var f = 0; f < matriz.length; f++){
-            if(f == (matriz.length-1)){
-              auxiliar[count] = matriz[f][c];
-            }
-            else if(matriz[f][c] > matriz [f+1][c]){
-
-                rango_din = frecuencias.slice(frecuencias.findIndex(element => element === matriz[f+1][c])+1,frecuencias.findIndex(element => element === matriz[f][c])+1);
-                rango_din = rango_din.sort((a, b) => b - a);
-
-                for(var d = 0; d < rango_din.length; d++){
-                    auxiliar[count] = rango_din[d];
-                    count++;
-                }
-                rango_din = [];
-            }
-            else{
-                
-                rango_din = frecuencias.slice(frecuencias.findIndex(element => element === matriz[f][c]),frecuencias.findIndex(element => element === matriz[f+1][c]));
-                rango_din = rango_din.sort((a, b) => a - b );
-
-                for(var d = 0; d < rango_din.length; d++){
-                    auxiliar[count] = rango_din[d];
-                    count++;
-                }
-                rango_din = [];
-            }
-            
-        }
-        frec_fin.push(auxiliar);
-        auxiliar = [];
-        count = 0;
-    }
-
-
-    return frec_fin;
-}*/
-
 // --------------------------------------------------------------------------------------------------------------------
 // Funcion para retornar las columnas de datos como un array de arrays de columnas, o devuelve la escala temporal como 
 // un unico array
@@ -655,8 +536,6 @@ function distancia_dos_vec_sin_NO(vect1_d,vect1_t){
 // Funcion para obtener canales de audio sobre los cuales trabajar
 function eje_espacial(espacio_nw){
     
-    //Logger.log("tiempo : " + espacio_nw);
-    
     var r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
 
     if(r_t_max_min[1] < 0){
@@ -665,13 +544,8 @@ function eje_espacial(espacio_nw){
         }
         r_t_max_min = [Math.max.apply(null,espacio_nw),Math.min.apply(null,espacio_nw)];
     } 
-
-    //Logger.log("max : " + r_t_max_min);
-    
-    //Logger.log("vector :" + espacio_nw)
   
     var secciones = seccionador(r_t_max_min[0],r_t_max_min[1]);
-    //Logger.log("secciones: " + secciones);
     var canales = [];
 
     for( var j = 0; j < espacio_nw.length; j++ ){
@@ -699,7 +573,6 @@ function eje_espacial(espacio_nw){
             canales[j] = 7;
             break;
         }
-        //Logger.log(canales[j])
     }
 
     return canales;
@@ -793,8 +666,6 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
     let count = [];
     let count1 = [];
 
-    Logger.log(datos);
-
     for(var f = 0; f < datos.length; f++){
 
         if(typeof datos[f][0] != 'number'){
@@ -812,8 +683,7 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
                 datos[f][c] = "NO"
       
                 //Si toda la columna esta vacia o esta llena de strings se ignora toda la columna:
-                count[c] = count[c] + 1;
-                Logger.log("Entra contador " + count[c])          
+                count[c] = count[c] + 1;       
               
                 if(count[c] == datos.length){
                     
@@ -915,7 +785,6 @@ function reemplazar_por_promedio(data){
     let count = 0;
     let count_t = [];
 
-    Logger.log("Llegan datos promedio " + data);
  
     for (var f=0; f<data.length; f++) {
       for (var c=1; c<data[f].length; c++) {
@@ -960,7 +829,6 @@ function escala_musica(){
     while(nota_aux < nota_fin){
 
         nota_aux = nota_base * Math.pow(relacion_semitono,aumento_semitono)
-        //Logger.log("Nota + " + nota_aux + " - " + "semtiono + " + aumento_semitono)
         escala_musical[aumento_semitono] = nota_aux;
         aumento_semitono++;
 
@@ -998,17 +866,6 @@ function colocador_datos(tiempo,tipo_vac,tipo_grafico,rango_cel){
 
 }
 
-
-//Devuelve el nombre del usuario de la hoja de calculo, se extrae de su cuenta de Google Drive
-/*function retornar_nombre(){
-
-    var aboutData = DriveApp.About.get();
-    var userEmail = aboutData["user"]["emailAddress"];
-    Logger.log('Mi nombre : ' + userDisplayName);
-    return userDisplayName
-}*/
-
-
 function devolver_Nombre() {
 
     var about = Drive.About.get();
@@ -1035,9 +892,3 @@ function compartir_archivo(correo){
         return JSON.stringify("ERROR");
     }
 }
-
-/*
-function imprimir_datos(){
-    let celda = extraer_valores();
-    Logger.log(celda);
-}*/
