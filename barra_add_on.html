@@ -239,13 +239,13 @@
         //Se asigna funcionalidad a la combinacion de SHIFT + G
         if(event.shiftKey && event.code === 'KeyG'){
 
-            if(flujo === 7){
+            if(flujo === 6){
                 flujo = 2;
             }
 
             tiempo = 0; 
             tiempo = 200;
-            setTimeout(text_speach,tiempo,"Puedes presionar ALT + G en cualquier momento para detener los efectos de sonido");
+            setTimeout(text_speach,tiempo,"Puedes presionar ALT + G para detener los efectos de sonido o SHIFT más H para compartir el documento, en cualquier momento.");
             setTimeout(text_speach,tiempo+4000,"Presiona las teclas ALT más P, para ingresar el rango del gráfico.");
             flujo = 2;
 
@@ -255,7 +255,11 @@
         //Se asigna funcionalidad a la tecla ENTER
         if(event.keyCode === 13){
             
-            if(flujo == 3 && (typeof parseFloat(document.getElementById("tiempo").value) != 'number' || parseFloat(document.getElementById("tiempo").value) < 0)){
+            //Expresion regular para verificar solo numeros en textbox
+            let exp = /^[0-9]+\.?[0-9]*$/;
+            
+
+            if(flujo == 3 && exp.test(document.getElementById("tiempo").value) == false){
               document.getElementById("tiempo").value = "";
               text_speach("Tiempo incorrecto, porfavor ingresa nuevamente el tiempo como número y en segundos:")
             }
@@ -330,7 +334,7 @@
                 flujo_aux = 6;
             }
 
-            if(flujo == 7){
+            if(comprobando_correo == 1){
 
                 let prueba = google.script.run.withSuccessHandler(
 
@@ -345,25 +349,22 @@
                   else if(prueba === "CORRECTO"){
                       comprobando_celdas = 1;
                       //console.log("Valor adentro : " + comprobando);
-                      setTimeout(text_speach,200,"Documento compartido satisfactoriamente, presione SHIFT + G para sonificar otro gráfico o ALT + J para escuchar la última sonificación, o SHIFT + H para compartir con otra persona");
+                      setTimeout(text_speach,200,"Documento compartido satisfactoriamente, continua con el flujo anterior");
                   } 
 
                   if(comprobando_celdas !=0){
                     document.activeElement.blur();
-                    aux_relleno_evento = 0;
-                    flujo = 7;
+                    comprobando_correo = 0;
                   }
                   else{
                     document.getElementById("correo").focus();
-                    aux_relleno_evento = 2;
-                    flujo = 7;
+                    comprobando_correo = 1;
+                    document.getElementById("correo").value = "";
                   }
 
             }
             ).compartir_archivo(document.getElementById("correo").value);
 
-                aux_graf_evento = 0;
-                flujo_aux = 6;
             }
 
             }
@@ -377,25 +378,27 @@
             tiempo = 0;
             //Grafico de Linea
 
-            if(aux_relleno_evento === 0 && flujo === 2){
+            if(aux_relleno_evento === 0 && flujo === 2 && comprobando_correo != 1){
+                document.getElementById("rango").value = "";
                 document.getElementById("rango").focus();
                 mensaje = "Ingrese el rango de celdas para la extracción de datos en notación A1 o seleccionelo en la hoja de cálculo mediante cursor o teclado."
                 flujo = 2.5;
                 text_speach(mensaje);
             }
-            else if(aux_relleno_evento == 1 && flujo === 2.5){
+            else if(aux_relleno_evento == 1 && flujo === 2.5 && comprobando_correo != 1){
+                document.getElementById("tiempo").value = "";
                 document.getElementById("tiempo").focus();
                 mensaje = "Ingrese el tiempo deseado en segundos y posteriormente la tecla ENTER"
                 text_speach(mensaje);
                 tiempo = tiempo_speach(mensaje)*1000 + 200;
                 flujo = 3;
             }
-            else if(aux_relleno_evento == 2 && flujo === 7){
+            else if(comprobando_correo == 1){
+                document.getElementById("correo").value = "";
                 document.getElementById("correo").focus();
                 mensaje = "Ingrese el correo: "
                 text_speach(mensaje);
                 tiempo = tiempo_speach(mensaje)*1000 + 200;
-                flujo = 7;
             }
         }
 
@@ -410,7 +413,6 @@
             }
             else{
                 probando_gs();
-                flujo = 7;
             }
         
             //setTimeout(text_speach,tiempo,"Presiona las teclas ALT más P, para ingresar el tiempo del gráfico")
@@ -421,11 +423,8 @@
 
         if(event.shiftKey && event.code === 'KeyH'){
 
-          if(flujo === 7){
               text_speach("Presione las teclas ALT + P para escribir el correo de la persona con quien desee compartir el documento.")
-              aux_relleno_evento = 2;
-          }
-
+              comprobando_correo = 1;
         }
 
         //------------------------------------------------------------------------------------------------------
@@ -433,9 +432,9 @@
 
         if(event.altKey && event.code === 'KeyJ'){
 
-          if(flujo === 7){
+          if(flujo === 6){
               probando_gs();
-              flujo = 7;
+              flujo
           }
 
         }
