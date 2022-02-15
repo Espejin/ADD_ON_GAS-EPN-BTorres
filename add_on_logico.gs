@@ -668,11 +668,11 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
 
     for(var f = 0; f < datos.length; f++){
 
-        if(typeof datos[f][0] != 'number'){
-            datos.splice(f,1);
-        }
+        //if(typeof datos[f][0] != 'number'){
+        //    datos.splice(f,1);
+        //}
 
-        for(var c = 1; c < datos[0].length; c++){
+        for(var c = 0; c < datos[0].length; c++){
 
             if(f == 0){
               count[c] = 0;
@@ -711,7 +711,7 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
         //Calcula el promedio de las columnas:
         for(var f = 0; f < datos.length; f++){
 
-            for(var c = 1; c < datos[0].length; c++){
+            for(var c = 0; c < datos[0].length; c++){
 
 
                 if( f == 0){
@@ -726,8 +726,7 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
                 
                 if(f == datos.length - 1){
                     promedios[c] = suma[c]/count1[c];
-                    //Logger.log("Cuenta" + count)
-                    //Logger.log("Suma = " + suma);
+
                 }
             }
         }
@@ -736,12 +735,13 @@ function identificar_vacios_especial(datos,tipo_reemplazo){
 
         //Reemplaza los valores correspondientes por el promedio calculado:
         for(var f = 0; f < datos.length; f++){
-            for(var c = 1; c < datos[0].length; c++){
+            for(var c = 0; c < datos[0].length; c++){
               
                 //Se reemplaza el valor por el promedio
                 if(datos[f][c] == "NO"){
                     datos[f][c] = promedios[c];
                 }
+                Logger.log(datos);
 
             }
         }
